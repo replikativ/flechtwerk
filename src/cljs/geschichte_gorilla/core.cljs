@@ -1,12 +1,15 @@
 (ns geschichte-gorilla.core
   (:require [clojure.set :refer [difference]]
             [strokes :refer [d3]]
-            [cljs.reader :refer [read-string] :as read]
-            ))
+            [cljs.reader :refer [read-string] :as read]))
 
 (.log js/console "All hail to Kordano!")
 
 (strokes/bootstrap)
+
+(def test-cg
+  {:causal-order {10 [] 20 [10] 30 [20] 40 [20] 50 [40] 60 [30 50] 70 [60] 80 [30] 90 [80] 100 [70 140] 110 [100] 120 [90] 130 [30] 140 [130]}
+   :branches {"master" 110 "fix" 50 "dev" 120 "fix-2" 140}})
 
 (defn branches->nodes [c causal-order heads]
   (loop [parents (get causal-order c)
@@ -175,14 +178,14 @@
       remove))
 
 
-(defn draw-graph
+(defn graph-view
   "doc-string"
   [graph-data frame]
   (let [width (* 0.4 (.-width js/screen))
         height (* 0.5 (.-height js/screen))
         circle-size 10
         {:keys [nodes x-positions y-positions links branches]}
-        (compute-positions width height circle-size test-cg)
+        (compute-positions width height circle-size graph-data)
         svg (.. d3
                 (select frame)
                 (append "svg")
@@ -227,3 +230,6 @@
                                      (attr {:y (- (get y-positions d) 15)
                                             :x (get x-positions d)})
                                      (text d)))))))))
+
+
+(graph-view test-cg "#graph-span")
