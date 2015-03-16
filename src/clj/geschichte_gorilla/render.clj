@@ -1,6 +1,6 @@
 (ns geschichte-gorilla.render
-  (:require [gorilla-renderable.core :as render]))
-
+  (:require [gorilla-renderable.core :as render]
+            [clojure.data.json :as json]))
 
 (defrecord CommitGraphView [content opts])
 
@@ -9,6 +9,7 @@
 (extend-type CommitGraphView
   render/Renderable
   (render [self]
-    {:type :js
-     :content (format  )
-     :value}))
+    (let [content (str "geschichte-gorilla.core.graph-view(" (json/write-str (:content self)) ");")]
+        {:type :js
+         :content content
+         :value (pr-str self)})))
