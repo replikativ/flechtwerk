@@ -171,23 +171,23 @@
 
 
 
-(defn clear-canvas [frame]
+(defn clear-canvas [container]
   (.. d3
-      (select frame)
+      (select container)
       (select "svg")
       remove))
 
 
-(defn graph-view
-  "doc-string"
-  [graph-data frame]
+(defn render-graph
+  "Render the commit graph using d3"
+  [graph-data container]
   (let [width (* 0.4 (.-width js/screen))
         height (* 0.5 (.-height js/screen))
         circle-size 10
         {:keys [nodes x-positions y-positions links branches]}
         (compute-positions width height circle-size graph-data)
         svg (.. d3
-                (select frame)
+                (select container)
                 (append "svg")
                 (attr {:width width
                        :height height}))
@@ -232,4 +232,9 @@
                                      (text d)))))))))
 
 
-(graph-view test-cg "#graph-span")
+
+
+(defn ^:export renderGraph
+  [data container]
+  (let [cg (read-string data)]
+    (render-graph cg container)))
