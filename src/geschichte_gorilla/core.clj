@@ -1,24 +1,53 @@
 (ns geschichte-gorilla.core
-  (:require [gorilla-repl.vega :as v]))
+  (:require [geschichte-gorilla.vega :as vega]
+            [gorilla-repl.vega :as v]
+            [geschichte-gorilla.graph :as graph]))
 
-(defn- uuid [] (str (java.util.UUID/randomUUID)))
 
-
-(defn commit-graph [data & {}])
+(defn commit-graph
+  [peer & {:keys [width aspect-ratio color opacity]
+                   :or {width 500
+                        aspect-ratio 1.618
+                        color "steelblue"
+                        opacity 1}}]
+  (let [height (float (/ width aspect-ratio))]
+    (v/vega-view
+     (merge
+      (vega/frame width height)
+      (vega/graph-marks color opacity)
+      (->> (graph/compute-positions width height 20 peer)
+           vega/graph-data)))))
 
 
 (comment
-  (v/vega-view
-   {:width 400 :height 250 :pading {:bottom 20 :top 10 :right 10 :left 50}
-    :data [{:name "commits" :values [{:x 10 :y 10} {:x 20 :y 15}]}]
-    :marks [{:type "symbol"
-             :from {:data "commits"}
-             :properties
-             {:enter {:x {:field "data.x"}
-                      :y {:field "data.y"}
-                      :fill {:value "blue"}
-                      :fillOpacity {:value "1"}}
-              :update {:shape "circle"
-                       :size {:value 90}
-                       :stroke [:value "transparent"]}
-              :hover {:stroke {:value "green"}}}}]}))
+  (def test-peer
+    {"konnys stuff"
+     {:causal-order {10 []
+                     20 [10]
+                     30 [20]
+                     40 [20]
+                     50 [40]
+                     60 [30 50]
+                     70 [60]
+                     80 [30]
+                     90 [80]
+                     100 [70 140]
+                     110 [100]
+                     120 [90]
+                     130 [30]
+                     140 [130]}
+      :branches {"master" 110
+                 "fix" 50
+                 "dev" 120
+                 "fix-2" 140}}})
+
+  (commit-graph "konnys stuff" test-peer)
+
+  (let [repo-id "konnys stuff"
+        width 500
+        height 300]
+    (->> (get test-peer repo-id)
+         (graph/compute-positions width height 20)
+         (vega/graph-data repo-id)))
+
+  )

@@ -122,7 +122,7 @@
 
 
 (defn compute-positions
-  "Compute positions using widht, height, circle size and improved commit graph"
+  "Compute positions using width, height, circle size and improved commit graph"
   [w h cs cg]
   (let [icg (explore-commit-graph cg)
         eos (- w cs)]
