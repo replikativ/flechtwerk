@@ -27,7 +27,7 @@
             :from {:data "links"}
             :properties
             {:enter {:path {:field "data.path"}
-                     :stroke {:value "lightgrey"}
+                     :stroke {:value "grey"}
                      :fill "none"
                      :strokeWidth {:value 1}}}}]})
 
