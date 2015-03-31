@@ -69,15 +69,14 @@
            (into {})))))
 
 
-(defn find-merge-links [{:keys [causal-order branches] :as cg}]
-  (let [branch-heads (into {} (map (fn [[k v]] [v k]) branches))]
-    (assoc cg :merge-links
-      (->> (select-keys causal-order
-                (for [[k v] causal-order
-                      :when (> (count v) 1)]
-                  k))
-           (into {})
-           (map (fn [[k v]] (map (fn [b] [b [(branches b) k]]) (remove nil? (map branch-heads v)))))
+(defn find-merge-links [{:keys [causal-order branches nodes] :as cg}]
+  (let [nodes->branch (apply merge (map (fn [[b ns]] (zipmap ns (repeat (count ns) b))) nodes))]
+    (assoc cg
+      :merge-links
+      (->> (select-keys causal-order (for [[k v] causal-order :when (> (count v) 1)] k))
+           (map (fn [[k v]]
+                  (remove #(= (first %) (nodes->branch k))
+                          (map (fn [n] [(nodes->branch n) [n k]]) v))))
            (apply concat)
            (into {})))))
 
@@ -185,8 +184,10 @@
                 "dev" 120
                 "fix-2" 140}})
 
-  (explore-commit-graph test-repo)
-
-
+  (->> test-repo
+       commit-graph->nodes
+       distinct-nodes
+       nodes->order
+       find-merge-links)
 
   )
