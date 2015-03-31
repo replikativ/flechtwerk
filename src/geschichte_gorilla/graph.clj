@@ -159,3 +159,34 @@
                                     (map (fn [i] [(get nodes i) (+ start offset (* i dx))]))
                                     (into {}))]
           (recur (rest x-order) (merge x-positions branch-positions)))))))
+
+
+(comment
+  (def test-repo
+    {:causal-order {10 []
+                    20 [10]
+                    30 [20]
+                    40 [20]
+                    50 [40]
+                    60 [30 50]
+                    70 [60]
+                    80 [30]
+                    90 [80]
+                    100 [70 140]
+                    110 [100]
+                    120 [90]
+                    130 [30]
+                    140 [130]
+                    150 [50]
+                    160 [150]
+                    }
+     :branches {"master" 110
+                "fix" 160
+                "dev" 120
+                "fix-2" 140}})
+
+  (explore-commit-graph test-repo)
+
+
+
+  )
