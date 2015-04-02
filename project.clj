@@ -7,10 +7,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [gorilla-renderable "1.0.0"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]]
 
   :main geschichte-gorilla.core
 
-  :plugins [[lein-gorilla "0.3.4"]]
-  )
+  :plugins [[lein-gorilla "0.3.4"]])

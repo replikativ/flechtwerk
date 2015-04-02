@@ -1,6 +1,5 @@
 (ns geschichte-gorilla.core
   (:require [geschichte-gorilla.vega :as vega]
-            [gorilla-repl.vega :as v]
             [geschichte-gorilla.graph :as graph]))
 
 
@@ -11,12 +10,11 @@
                         color "steelblue"
                         opacity 1}}]
   (let [height (float (/ width aspect-ratio))]
-    (v/vega-view
-     (merge
-      (vega/frame width height)
-      (vega/graph-marks color opacity)
-      (->> (graph/compute-positions width height 20 peer)
-           vega/graph-data)))))
+    (merge
+     (vega/frame width height)
+     (vega/graph-marks color opacity)
+     (->> (graph/compute-positions width height 20 peer)
+          vega/graph-data))))
 
 
 (comment

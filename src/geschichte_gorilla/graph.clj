@@ -33,9 +33,8 @@
            (conj links [b (set l-order)])))))))
 
 
-(defn commit-graph->nodes [cg]
-  (let [{:keys [branches causal-order]} cg
-        heads (into #{} (vals branches))]
+(defn commit-graph->nodes [{:keys [branches causal-order] :as cg}]
+  (let [heads (into #{} (vals branches))]
     (assoc cg :nodes
            (loop [[b c] (first branches)
                   b-list (rest branches)
@@ -110,8 +109,8 @@
 
 (defn explore-commit-graph
   "Run the pipeline"
-  [cg]
-  (->> cg
+  [repo]
+  (->> (select-keys repo [:branches :causal-order])
        commit-graph->nodes
        distinct-nodes
        nodes->order
