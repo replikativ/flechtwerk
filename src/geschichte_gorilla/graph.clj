@@ -62,10 +62,12 @@
            (into {}))
       :branch-links
       (->> new-nodes
-           (map (fn [[k v]] [k (if (nil? (first v))
-                                nil
-                                (vec (take 2 v)))]))
-           (into {})))))
+           (map (fn [[k v]] (if (nil? (first v))
+                             nil
+                             {k (conj (vec (take 2 v)) k)})))
+           concat
+           (remove nil?)
+           (apply merge-with conj)))))
 
 
 (defn find-merge-links [{:keys [causal-order branches nodes] :as cg}]
@@ -74,11 +76,11 @@
       :merge-links
       (->> (select-keys causal-order (for [[k v] causal-order :when (> (count v) 1)] k))
            (map (fn [[k v]]
-                  (remove #(= (first %) (nodes->branch k))
-                          (map (fn [n] [(nodes->branch n) [n k]]) v))))
+                  (remove #(= (ffirst %) (nodes->branch k))
+                          (map (fn [n] {(nodes->branch n) [[n k (nodes->branch n)]]}) v))))
+           (reverse)
            (apply concat)
-           (into {})))))
-
+           (apply merge-with (comp vec concat))))))
 
 (defn nodes->links [{:keys [nodes] :as cg}]
   (assoc cg
@@ -86,12 +88,11 @@
     (->> nodes
          (map
           (fn [[k v]]
-            [k
-             (mapv
-              (fn [i]
-                [(get v i) (get v (inc i))])
-              (range (count v)))]))
-         (into {}))))
+            (mapv
+             (fn [i]
+               [(get v i) (get v (inc i)) k])
+             (range (count v)))))
+         (apply concat))))
 
 (defn nodes->x-y-order [{:keys [nodes] :as cg}]
   (let [x-order (mapv first (sort-by val #(> (count %1) (count %2)) nodes))]
@@ -120,35 +121,35 @@
 
 
 (defn compute-positions
-  "Compute positions using width, height, circle size and improved commit graph"
+  "Compute positions using width, height, circle size and repo data"
   [w h cs cg]
-  (let [icg (explore-commit-graph cg)
+  (let [ecg (explore-commit-graph cg)
         eos (- w cs)]
-    (loop [x-order (:x-order icg)
+    (loop [x-order (:x-order ecg)
            x-positions {}]
       (if (empty? x-order)
-        (assoc icg
-          :nodes (apply concat (vals (:nodes icg)))
+        (assoc ecg
+          :nodes (apply concat (vals (:nodes ecg)))
           :links (remove
                   #(or (nil? %) (-> % second nil?))
-                  (concat (apply concat (vals (:links icg)))
-                          (vals (:branch-links icg))
-                          (vals (:merge-links icg))))
+                  (concat (:links ecg)
+                          (vals (:branch-links ecg))
+                          (apply concat (vals (:merge-links ecg)))))
           :x-positions x-positions
-          :y-positions (let [m (count (:y-order icg))
+          :y-positions (let [m (count (:y-order ecg))
                              dy (/ (- h (* 2 cs)) m )]
                          (->> (range m)
                               (map
                                (fn [i]
-                                 (->> (get-in icg [:nodes (get (:y-order icg) i)])
+                                 (->> (get-in ecg [:nodes (get (:y-order ecg) i)])
                                       (map (fn [id] [id (+ cs (/ dy 2) (* i dy))]))
                                       (into {}))))
                               (apply merge))))
         (let [branch (first x-order)
-              nodes (get-in icg [:nodes branch])
+              nodes (get-in ecg [:nodes branch])
               n (count nodes)
-              start (or (get x-positions (first (get-in icg [:branch-links branch]))) cs)
-              end (or (get x-positions (last (get-in icg [:merge-links branch]))) eos)
+              start (or (get x-positions (first (get-in ecg [:branch-links branch]))) cs)
+              end (or (get x-positions (-> ecg (get-in [:merge-links branch]) first second) ) eos)
               dx (/ (- end start) (if (= start 0)
                                     (if (= end eos) (dec n) n)
                                     (if (= end eos) n (inc n))))
@@ -177,8 +178,8 @@
                     140 [130]
                     150 [50]
                     160 [150]
-                    }
-     :branches {"master" 110
+                    170 [160 110]}
+     :branches {"master" 170
                 "fix" 160
                 "dev" 120
                 "fix-2" 140}})
@@ -188,5 +189,8 @@
        distinct-nodes
        nodes->order
        find-merge-links)
+
+
+  (compute-positions 500 400 20 test-repo)
 
   )

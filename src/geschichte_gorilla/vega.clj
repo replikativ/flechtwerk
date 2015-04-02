@@ -2,6 +2,7 @@
   (:require [geschichte-gorilla.graph :as graph]))
 
 (defn frame
+  "Build container that holds the svg"
   [width height]
   {:width width
    :height height
@@ -11,9 +12,17 @@
 
 
 (defn graph-marks
-  "Build node marks"
-  [colour opacity]
-  {:marks [{:type "symbol"
+  "Build node and link marks"
+  []
+  {:marks [{:type "path"
+            :from {:data "links"}
+            :properties
+            {:enter {:path {:field "data.path"}
+                     :strokeWidth {:value 2}
+                     :stroke {:r {:field "data.r"}
+                              :g {:field "data.g"}
+                              :b {:field "data.b"}}}}}
+           {:type "symbol"
             :from {:data "nodes"}
             :properties
             {:enter {:x {:field "data.x"}
@@ -22,63 +31,36 @@
                      :fillOpacity {:value "1"}}
              :update {:shape "circle"
                       :size {:value 90}
-                      :stroke [:value "transparent"]}}}
-           {:type "path"
-            :from {:data "links"}
-            :properties
-            {:enter {:path {:field "data.path"}
-                     :stroke {:value "grey"}
-                     :fill "none"
-                     :strokeWidth {:value 1}}}}]})
+                      :stroke [:value "transparent"]}}}]})
 
 
 
 (defn graph-data
-  "Build vega data"
-  [{:keys [nodes links x-positions y-positions branches]}]
-  {:data
-   [{:name "nodes"
-     :values
-     (mapv
-      (fn [id] {:value id
-               :x (get x-positions id)
-               :y (get y-positions id)
-               :fill (if (contains? (into #{} (vals branches)) id)
-                       "red"
-                       "steelblue")}) nodes)}
-    {:name "links"
-     :values
-     (mapv
-      (fn [[source target]]
-        {:path (str "M " (float (get x-positions source))
-                    " " (float (get y-positions source))
-                    " L " (float (get x-positions target))
-                    " " (float (get y-positions target)))})
-      links)}]})
-
-
-(comment
-  (def test-repo
-    {:causal-order {10 []
-                    20 [10]
-                    30 [20]
-                    40 [20]
-                    50 [40]
-                    60 [30 50]
-                    70 [60]
-                    80 [30]
-                    90 [80]
-                    100 [70 140]
-                    110 [100]
-                    120 [90]
-                    130 [30]
-                    140 [130]}
-     :branches {"master" 110
-                "fix" 50
-                "dev" 120
-                "fix-2" 140}})
-
-  (graph-data
-   (graph/compute-positions 500 300 10 test-repo))
-
-  )
+  "Build vega data structures"
+  [{:keys [nodes links x-positions y-positions branches x-order]}]
+  (let [color (zipmap x-order (take (count x-order)
+                                    (repeatedly (fn [] {:r (rand-int 256)
+                                                       :g (rand-int 256)
+                                                       :b (rand-int 256)}))))]
+    {:data
+     [{:name "nodes"
+       :values
+       (mapv
+        (fn [id] {:value id
+                 :x (get x-positions id)
+                 :y (get y-positions id)
+                 :fill (if (contains? (into #{} (vals branches)) id)
+                         "red"
+                         "steelblue")}) nodes)}
+      {:name "links"
+       :values
+       (mapv
+        (fn [[source target branch]]
+          {:path (str "M " (float (get x-positions source))
+                      " " (float (get y-positions source))
+                      " L " (float (get x-positions target))
+                      " " (float (get y-positions target)))
+           :r (get-in color [branch :r])
+           :g (get-in color [branch :g])
+           :b (get-in color [branch :b])})
+        links)}]}))
