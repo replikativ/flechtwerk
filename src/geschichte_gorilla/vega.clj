@@ -9,8 +9,6 @@
    :padding {:top 10, :left 50, :bottom 20, :right 10}})
 
 
-
-
 (defn graph-marks
   "Build node and link marks"
   []
@@ -18,16 +16,16 @@
             :from {:data "links"}
             :properties
             {:enter {:path {:field "data.path"}
-                     :strokeWidth {:value 2}
-                     :stroke {:r {:field "data.r"}
-                              :g {:field "data.g"}
-                              :b {:field "data.b"}}}}}
+                     :strokeWidth {:value 1}
+                     :stroke {:value "grey"}}}}
            {:type "symbol"
             :from {:data "nodes"}
             :properties
             {:enter {:x {:field "data.x"}
                      :y {:field "data.y"}
-                     :fill {:field "data.fill"}
+                     :fill {:r {:field "data.r"}
+                            :g {:field "data.g"}
+                            :b {:field "data.b"}}
                      :fillOpacity {:value "1"}}
              :update {:shape "circle"
                       :size {:value 90}
@@ -46,12 +44,13 @@
      [{:name "nodes"
        :values
        (mapv
-        (fn [id] {:value id
-                 :x (get x-positions id)
-                 :y (get y-positions id)
-                 :fill (if (contains? (into #{} (vals branches)) id)
-                         "red"
-                         "steelblue")}) nodes)}
+        (fn [[id branch]] {:value id
+                          :x (get x-positions id)
+                          :y (get y-positions id)
+                          :r (get-in color [branch :r])
+                          :g (get-in color [branch :g])
+                          :b (get-in color [branch :b])})
+        nodes)}
       {:name "links"
        :values
        (mapv
@@ -59,8 +58,5 @@
           {:path (str "M " (float (get x-positions source))
                       " " (float (get y-positions source))
                       " L " (float (get x-positions target))
-                      " " (float (get y-positions target)))
-           :r (get-in color [branch :r])
-           :g (get-in color [branch :g])
-           :b (get-in color [branch :b])})
+                      " " (float (get y-positions target)))})
         links)}]}))

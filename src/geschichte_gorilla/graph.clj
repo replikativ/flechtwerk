@@ -45,6 +45,7 @@
                       (rest b-list)
                       (conj result [b (branches->nodes c causal-order heads)])))))))
 
+
 (defn nodes->order
   "Calculate commit order in time"
   [{:keys [nodes causal-order branches] :as cg}]
@@ -82,6 +83,7 @@
            (apply concat)
            (apply merge-with (comp vec concat))))))
 
+
 (defn nodes->links [{:keys [nodes] :as cg}]
   (assoc cg
     :links
@@ -93,6 +95,7 @@
                [(get v i) (get v (inc i)) k])
              (range (count v)))))
          (apply concat))))
+
 
 (defn nodes->x-y-order [{:keys [nodes] :as cg}]
   (let [x-order (mapv first (sort-by val #(> (count %1) (count %2)) nodes))]
@@ -107,6 +110,7 @@
                                               (concat y-order [(first order)])
                                               (concat [(first order)] y-order))
                                (not i))))))))
+
 
 (defn explore-commit-graph
   "Run the pipeline"
@@ -129,7 +133,7 @@
            x-positions {}]
       (if (empty? x-order)
         (assoc ecg
-          :nodes (apply concat (vals (:nodes ecg)))
+          :nodes (apply concat (map (fn [[branch ns]] (map (fn [n] [n branch]) ns)) (:nodes ecg)))
           :links (remove
                   #(or (nil? %) (-> % second nil?))
                   (concat (:links ecg)
@@ -161,6 +165,7 @@
 
 
 (comment
+
   (def test-repo
     {:causal-order {10 []
                     20 [10]
@@ -184,6 +189,7 @@
                 "dev" 120
                 "fix-2" 140}})
 
+
   (->> test-repo
        commit-graph->nodes
        distinct-nodes
@@ -192,5 +198,6 @@
 
 
   (compute-positions 500 400 20 test-repo)
+
 
   )
