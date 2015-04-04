@@ -12,7 +12,7 @@ Geschichte-gorilla is available at Clojars. Add the following to the `:dependenc
 
 ## Example Usage
 
-```
+```clojure
 (ns your.gorilla.repl 
   (:require  [gorilla-repl.vega :as v]
              [geschichte-gorilla.core :as g]))
