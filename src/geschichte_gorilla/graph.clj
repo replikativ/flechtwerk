@@ -112,10 +112,15 @@
                                (not i))))))))
 
 
+(defn unify-branch-heads [cg]
+  (update-in cg [:branches] (fn [b] (into {} (map (fn [[k v]] [k (first v)]) b)))))
+
+
 (defn explore-commit-graph
   "Run the pipeline"
   [repo]
   (->> (select-keys repo [:branches :causal-order])
+       unify-branch-heads
        commit-graph->nodes
        distinct-nodes
        nodes->order
@@ -184,17 +189,14 @@
                     150 [50]
                     160 [150]
                     170 [160 110]}
-     :branches {"master" 170
-                "fix" 160
-                "dev" 120
-                "fix-2" 140}})
+     :branches {"master" #{170}
+                "fix" #{160}
+                "dev" #{120}
+                "fix-2" #{140}}})
 
 
   (->> test-repo
-       commit-graph->nodes
-       distinct-nodes
-       nodes->order
-       find-merge-links)
+       unify-branch-heads)
 
 
   (compute-positions 500 400 20 test-repo)
