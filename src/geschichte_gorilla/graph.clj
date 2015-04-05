@@ -9,7 +9,7 @@
     (if (nil? parents)
       order
       (if (< 2 (count parents))
-        (recur (get causal-order  (first parents))
+        (recur (get causal-order (first parents))
                (first parents)
                (conj order node))
         (let [next-node (first (remove heads parents))]
@@ -72,16 +72,15 @@
 
 
 (defn find-merge-links [{:keys [causal-order branches nodes] :as cg}]
-  (let [nodes->branch (apply merge (map (fn [[b ns]] (zipmap ns (repeat (count ns) b))) nodes))]
-    (assoc cg
-      :merge-links
-      (->> (select-keys causal-order (for [[k v] causal-order :when (> (count v) 1)] k))
-           (map (fn [[k v]]
-                  (remove #(= (ffirst %) (nodes->branch k))
-                          (map (fn [n] {(nodes->branch n) [[n k (nodes->branch n)]]}) v))))
-           (reverse)
-           (apply concat)
-           (apply merge-with (comp vec concat))))))
+  (let [nodes->branch (apply merge (map (fn [[b ns]] (zipmap ns (repeat (count ns) b))) nodes))
+        merge-links (->> (select-keys causal-order (for [[k v] causal-order :when (> (count v) 1)] k))
+                         (map (fn [[k v]]
+                                (remove #(= (ffirst %) (nodes->branch k))
+                                        (map (fn [n] {(nodes->branch n) [[n k (nodes->branch n)]]}) v))))
+                         (reverse)
+                         (apply concat)
+                         (apply merge-with (comp vec concat)))]
+    (assoc cg :merge-links (dissoc merge-links nil))))
 
 
 (defn nodes->links [{:keys [nodes] :as cg}]
@@ -202,4 +201,14 @@
   (compute-positions 500 400 20 test-repo)
 
 
-  )
+  (def cgraph {:causal-order {#uuid "3349a6e0-43f2-5498-a451-08a67a98139c" [#uuid "396efcbf-41bb-5bd0-8b1e-22d3ff77df44" #uuid "16b5f599-4d21-5391-87a4-a553ec179925"], #uuid "2301bb14-485e-590a-885d-bd6bffdef770" [#uuid "3f8efd4a-8974-5f60-b538-5c84aeda751d" #uuid "3ee4e3dc-1bf7-5df3-83c7-e0e23ebdf2f6"], #uuid "0c86b3c8-99ba-5d4e-9e4c-271db0ac28fe" [#uuid "1732711a-e146-5706-ae7a-3cbe3fc27cf5"], #uuid "0f3b1653-320d-577e-bc66-ce510f9158d5" [#uuid "0c86b3c8-99ba-5d4e-9e4c-271db0ac28fe"], #uuid "17470e86-8d87-5343-9233-bd657a74bf2c" [#uuid "223c9306-afed-5ad1-bb16-ccb7f3137032"], #uuid "223c9306-afed-5ad1-bb16-ccb7f3137032" [#uuid "20b18ded-1dd9-56b0-9715-25bcd42fc63c"], #uuid "3004b2bd-3dd9-5524-a09c-2da166ffad6a" [], #uuid "3f8efd4a-8974-5f60-b538-5c84aeda751d" [#uuid "17470e86-8d87-5343-9233-bd657a74bf2c"], #uuid "1732711a-e146-5706-ae7a-3cbe3fc27cf5" [#uuid "3349a6e0-43f2-5498-a451-08a67a98139c" #uuid "04922927-9da4-57e6-947a-01bf67338889"], #uuid "04922927-9da4-57e6-947a-01bf67338889" [#uuid "3004b2bd-3dd9-5524-a09c-2da166ffad6a"], #uuid "396efcbf-41bb-5bd0-8b1e-22d3ff77df44" [#uuid "3004b2bd-3dd9-5524-a09c-2da166ffad6a"], #uuid "3ee4e3dc-1bf7-5df3-83c7-e0e23ebdf2f6" [#uuid "1732711a-e146-5706-ae7a-3cbe3fc27cf5"], #uuid "20b18ded-1dd9-56b0-9715-25bcd42fc63c" [#uuid "0f3b1653-320d-577e-bc66-ce510f9158d5"], #uuid "16b5f599-4d21-5391-87a4-a553ec179925" [#uuid "3004b2bd-3dd9-5524-a09c-2da166ffad6a"]}, :id #uuid "cda8bb59-6a0a-4fbd-85d9-4a7f56eb5487", :description "ev-cd experiments.", :schema {:type "http://github.com/ghubber/geschichte", :version 1}, :branches {"calibrate" #{#uuid "2301bb14-485e-590a-885d-bd6bffdef770"}}, :public false})
+
+  (->> (select-keys cgraph [:branches :causal-order])
+       unify-branch-heads
+       commit-graph->nodes
+       distinct-nodes
+       nodes->order
+       find-merge-links
+       )
+
+  (clojure.pprint/pprint (compute-positions 500 400 20 cgraph)))
