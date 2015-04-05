@@ -9,6 +9,4 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]]
 
-  :main geschichte-gorilla.core
-
-  :plugins [[lein-gorilla "0.3.4"]])
+  :main geschichte-gorilla.core)
