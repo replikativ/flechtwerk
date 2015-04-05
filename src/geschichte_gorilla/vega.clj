@@ -29,7 +29,17 @@
                      :fillOpacity {:value "1"}}
              :update {:shape "circle"
                       :size {:value 90}
-                      :stroke [:value "transparent"]}}}]})
+                      :stroke [:value "transparent"]}}}
+           {:type "text"
+            :from {:data "labels"}
+            :properties
+            {:enter {:x {:field "data.x"}
+                     :y {:field "data.y"}
+                     :align {:value  "left"}
+                     :dx {:value 10}
+                     :fontSize {:value 15}
+                     :fill {:value "black"}}
+             :update {:text {:field "data.value"}}}}]})
 
 
 
@@ -59,4 +69,12 @@
                       " " (float (get y-positions source))
                       " L " (float (get x-positions target))
                       " " (float (get y-positions target)))})
-        links)}]}))
+        links)}
+      {:name "labels"
+       :values
+       (mapv
+        (fn [[k v]]
+          {:value k
+           :x (get x-positions v)
+           :y (get y-positions v)})
+        branches)}]}))

@@ -5,7 +5,7 @@
 
 (defn commit-graph
   [peer & {:keys [width aspect-ratio color opacity]
-           :or {width 500
+           :or {width 600
                 aspect-ratio 1.618
                 opacity 1}}]
   (let [height (float (/ width aspect-ratio))]

@@ -133,7 +133,7 @@
   "Compute positions using width, height, circle size and repo data"
   [w h cs cg]
   (let [ecg (explore-commit-graph cg)
-        eos (- w cs)]
+        eos (- w cs 50)]
     (loop [x-order (:x-order ecg)
            x-positions {}]
       (if (empty? x-order)
