@@ -60,7 +60,7 @@
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
-(defn run-order-pipeline
+(defn repo-pipeline
   "Run the pipeline"
   [repo]
   (->> (select-keys repo [:branches :causal-order :commits])
@@ -156,7 +156,7 @@
                 "fix-2" #{140}}})
 
 
-  (run-order-pipeline test-repo)
+  (repo-pipeline test-repo)
 
 
 
