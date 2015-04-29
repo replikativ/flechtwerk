@@ -43,8 +43,9 @@
          (apply merge
                 (map
                  (fn [[b ns]]
-                   (let [root (first ns)]
-                     {b [(first (get causal-order root)) root]}))
+                   (let [root (first ns)
+                         root-head (first (get causal-order root))]
+                     {(get nodes root-head) [root-head root]}))
                  nodes))))
 
 
