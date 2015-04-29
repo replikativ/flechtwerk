@@ -188,6 +188,18 @@
                     150 [50]
                     160 [150]
                     170 [160 110]}
+     :meta-data
+     {10 "master"
+      20 "master"
+      30 "master"
+      40 "fix"
+      50 "fix"
+      60 "master"
+      70 "master"
+      80 "dev"
+      90 "dev"
+      100 "master"
+      110 "master"}
      :branches {"master" #{170}
                 "fix" #{160}
                 "dev" #{120}
@@ -195,7 +207,9 @@
 
 
   (->> test-repo
-       unify-branch-heads)
+       unify-branch-heads
+       commit-graph->nodes
+       )
 
 
   (compute-positions 500 400 20 test-repo)
