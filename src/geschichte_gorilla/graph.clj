@@ -2,93 +2,8 @@
   (:require [clojure.set :refer [difference]]))
 
 
-(defn branches->nodes [c causal-order c-nodes]
-  (loop [parents (get causal-order c)
-           node c
-           order (list c)]
-      (let [next-node (first (filter c-nodes parents))]
-        (if next-node
-          (recur (get causal-order next-node) next-node (conj order next-node))
-          order))))
-
-
-(defn repo->node-order [{:keys [branches causal-order nodes] :as repo}]
-  (assoc repo :nodes
-         (apply merge (map (fn [[b h]] {b (branches->nodes h causal-order (get nodes b))}) branches))))
-
-(defn repo->branch-links [{:keys [causal-order nodes] :as repo}]
-  (assoc repo :branch-links
-           (apply merge
-                  (map (fn [[b ns]] (let [root (first ns)]
-                                     {b [(first (get causal-order root)) root]})) nodes))))
-
-(defn nodes->order
-  "Calculate commit order in time"
-  [{:keys [nodes causal-order branches] :as cg}]
-  (let [new-nodes (map
-                   (fn [[b b-nodes]]
-                     [b (branches->nodes
-                         (get branches b)
-                         (select-keys causal-order b-nodes)
-                         (into #{} (vals branches)))])
-                   nodes)]
-    (assoc cg
-      :nodes
-      (->> new-nodes
-           (map (fn [[k v]] [k (vec (rest v))]))
-           (into {}))
-      :branch-links
-      (->> new-nodes
-           (map (fn [[k v]] (if (nil? (first v))
-                             nil
-                             {k (conj (vec (take 2 v)) k)})))
-           concat
-           (remove nil?)
-           (apply merge-with conj)))))
-
-
-(defn find-merge-links [{:keys [causal-order branches nodes] :as cg}]
-  (let [nodes->branch (apply merge (map (fn [[b ns]] (zipmap ns (repeat (count ns) b))) nodes))
-        merge-links (->> (select-keys causal-order (for [[k v] causal-order :when (> (count v) 1)] k))
-                         (map (fn [[k v]]
-                                (remove #(= (ffirst %) (nodes->branch k))
-                                        (map (fn [n] {(nodes->branch n) [[n k (nodes->branch n)]]}) v))))
-                         (reverse)
-                         (apply concat)
-                         (apply merge-with (comp vec concat)))]
-    (assoc cg :merge-links (dissoc merge-links nil))))
-
-
-(defn nodes->links [{:keys [nodes] :as cg}]
-  (assoc cg
-    :links
-    (->> nodes
-         (map
-          (fn [[k v]]
-            (mapv
-             (fn [i]
-               [(get v i) (get v (inc i)) k])
-             (range (count v)))))
-         (apply concat))))
-
-
-(defn nodes->x-y-order [{:keys [nodes] :as cg}]
-  (let [x-order (mapv first (sort-by val #(> (count %1) (count %2)) nodes))]
-    (assoc cg
-      :x-order x-order
-      :y-order (vec (loop [order x-order
-                           y-order []
-                           i true]
-                      (if (empty? order)
-                        y-order
-                        (recur (rest order) (if i
-                                              (concat y-order [(first order)])
-                                              (concat [(first order)] y-order))
-                               (not i))))))))
-
-
-(defn unify-branch-heads [cg]
-  (update-in cg [:branches] (fn [b] (into {} (map (fn [[k v]] [k (first v)]) b)))))
+(defn unify-branch-heads [repo]
+  (update-in repo [:branches] (fn [b] (into {} (map (fn [[k v]] [k (first v)]) b)))))
 
 
 (defn commits->nodes
@@ -98,18 +13,61 @@
          (apply merge-with (comp set concat)
                 (map (fn [[n b]] {b [n]}) (:commits repo)))))
 
+(defn branches->nodes
+  "Find ordered nodes in branch"
+  [c causal-order c-nodes]
+  (loop [parents (get causal-order c)
+           node c
+           order (list c)]
+      (let [next-node (first (filter c-nodes parents))]
+        (if next-node
+          (recur (get causal-order next-node) next-node (conj order next-node))
+          order))))
 
-(defn explore-commit-graph
+
+(defn node-order
+  "Create node order from given branches, nodes and causal-order"
+  [{:keys [branches causal-order nodes] :as repo}]
+  (assoc repo :nodes
+         (apply merge
+                (map
+                 (fn [[b h]]
+                   {b (branches->nodes h causal-order (get nodes b))})
+                 branches))))
+
+
+(defn branch-links
+  "Find branch-links in all branches"
+  [{:keys [causal-order nodes] :as repo}]
+  (assoc repo :branch-links
+         (apply merge
+                (map
+                 (fn [[b ns]]
+                   (let [root (first ns)]
+                     {b [(first (get causal-order root)) root]}))
+                 nodes))))
+
+
+(defn merge-links
+  "Find merge-links in all branches"
+  [{:keys [causal-order commits] :as repo}]
+  (assoc repo :merge-links
+         (apply merge-with concat
+                (map
+                 (fn [[b link]]
+                   {(get commits b) [link]})
+                 (filter #(> (count (val %)) 1) causal-order)))))
+
+
+(defn run-order-pipeline
   "Run the pipeline"
   [repo]
-  (->> (select-keys repo [:branches :causal-order])
+  (->> (select-keys repo [:branches :causal-order :commits])
        unify-branch-heads
-       commit-graph->nodes
-       distinct-nodes
-       nodes->order
-       find-merge-links
-       nodes->links
-       nodes->x-y-order))
+       commits->nodes
+       node-order
+       branch-links
+       merge-links))
 
 
 (defn compute-positions
@@ -197,16 +155,8 @@
                 "fix-2" #{140}}})
 
 
-  (let [{:keys [causal-order nodes branches commits] :as repo}
-        (->> test-repo
-             unify-branch-heads
-             commits->nodes
-             repo->node-order
-             repo->branch-links)]
-    (map
-     (fn [[b link]]
-       {(get commits b) link})
-     (filter #(> (count (val %)) 1) causal-order)))
+  (run-order-pipeline test-repo)
+
 
 
   )
