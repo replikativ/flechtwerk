@@ -178,19 +178,19 @@
              branch-points
              merge-links)]
     (loop [branches (get branch-points :root)
-           next-nodes (get nodes (first branches))
-           offset 0
+           current-branch (first branches)
+           next-nodes (get nodes current-branch)
+           offsets {current-branch 0}
            max-n (count next-nodes)]
-      (if (empty? branches)
-        max-n
-        (if (empty? next-nodes)
-          (let [new-nodes (get nodes (first (rest branches)))]
-              (recur (rest branches) new-nodes 0 max-n))
-          (if-let [next-branches (get branch-points (first next-nodes))]
-            (recur (concat branches next-branches) (rest next-nodes) (inc offset) max-n)
-            (recur branches (rest next-nodes) (inc offset) max-n))))))
+      (if (empty? next-nodes)
+        (if-let [next-branch (first (rest branches))]
+          (recur (rest branches) next-branch (get nodes next-branch) offsets max-n)
+          (assoc repo :offsets offsets))
+        (if-let [next-branches (get branch-points (first next-nodes))]
+          (let [new-offsets (zipmap (vec next-branches) (repeat (count next-branches) (get offsets current-branch))) ]
+            (recur (concat branches next-branches) current-branch (rest next-nodes) (merge (update-in offsets [current-branch] inc) new-offsets) max-n))
+          (recur branches current-branch (rest next-nodes) (update-in offsets [current-branch] inc) max-n)))))
 
 
   (ap)
-
-  7)
+  )
