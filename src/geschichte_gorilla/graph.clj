@@ -46,27 +46,19 @@
                  branches))))
 
 
-(defn branch-links
+(defn branch-points
   "Find branch-links in all branches"
   [{:keys [causal-order nodes commits] :as repo}]
-  (assoc repo :branch-links
+  (assoc repo :branch-points
          (apply merge-with concat
                 (map
                  (fn [[b ns]]
                    (let [root (first ns)
                          root-head (first (get causal-order root))]
-                     {b [root-head root]}))
+                     (if root-head
+                       {root-head [b]}
+                       {:root [b]})))
                  nodes))))
-
-
-(defn branch-nodes
-  "doc-string"
-  [{:keys [branch-links commits] :as repo}]
-  (assoc repo :branch-nodes
-    (dissoc
-     (apply merge-with
-            (comp set concat)
-            (apply concat (map (fn [bls] (map (fn [n] {(get commits n) #{n}}) bls)) (vals branch-links)))) nil)))
 
 
 (defn merge-links
@@ -80,6 +72,8 @@
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
+
+
 (defn repo-pipeline
   "Run the pipeline"
   [repo]
@@ -87,7 +81,7 @@
        unify-branch-heads
        commits->nodes
        node-order
-       branch-links
+       branch-points
        merge-links))
 
 
@@ -174,33 +168,29 @@
                 "fix" #{160}
                 "dev" #{120}
                 "fix-2" #{140}}})
-  (let [{:keys [branch-links commits nodes] :as repo}
+
+
+  (let [{:keys [branch-points commits nodes] :as repo}
         (->> test-repo
              unify-branch-heads
              commits->nodes
              node-order
-             branch-links
-             branch-nodes
-             merge-links)
-        [longest-branch longest-seq] (first (sort-by val #(> (count %1) (count %2)) nodes))]
-    (if (first (branch-links longest-branch))
-      (+ (count longest-seq)
-         (inc
-          (first
-           (positions
-            #{(first (branch-links longest-branch))}
-            (get nodes (get commits (first (branch-links longest-branch))))))))
-      (count longest-seq)))
+             branch-points
+             merge-links)]
+    (loop [branches (get branch-points :root)
+           next-nodes (get nodes (first branches))
+           offset 0
+           max-n (count next-nodes)]
+      (if (empty? branches)
+        max-n
+        (if (empty? next-nodes)
+          (let [new-nodes (get nodes (first (rest branches)))]
+              (recur (rest branches) new-nodes 0 max-n))
+          (if-let [next-branches (get branch-points (first next-nodes))]
+            (recur (concat branches next-branches) (rest next-nodes) (inc offset) max-n)
+            (recur branches (rest next-nodes) (inc offset) max-n))))))
 
 
-  #_(if (first (branch-links longest-branch))
-      (+ (count longest-seq)
-         (inc
-          (first
-           (positions
-            #{(first (branch-links longest-branch))}
-            (get nodes (get commits (first (branch-links longest-branch))))))))
-      (count longest-seq))
   (ap)
 
   7)
