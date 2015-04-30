@@ -1,5 +1,15 @@
 (ns geschichte-gorilla.graph
-  (:require [clojure.set :refer [difference]]))
+  (:require [clojure.set :refer [difference]]
+            [aprint.core :refer [ap]]))
+
+(defn positions
+  "Find item index
+   http://stackoverflow.com/questions/4830900/how-do-i-find-the-index-of-an-item-in-a-vector"
+  [pred coll]
+  (keep-indexed (fn [idx x]
+                  (when (pred x)
+                    idx))
+                coll))
 
 
 (defn unify-branch-heads [repo]
@@ -38,15 +48,25 @@
 
 (defn branch-links
   "Find branch-links in all branches"
-  [{:keys [causal-order nodes] :as repo}]
+  [{:keys [causal-order nodes commits] :as repo}]
   (assoc repo :branch-links
-         (apply merge
+         (apply merge-with concat
                 (map
                  (fn [[b ns]]
                    (let [root (first ns)
                          root-head (first (get causal-order root))]
-                     {(get nodes root-head) [root-head root]}))
+                     {b [root-head root]}))
                  nodes))))
+
+
+(defn branch-nodes
+  "doc-string"
+  [{:keys [branch-links commits] :as repo}]
+  (assoc repo :branch-nodes
+    (dissoc
+     (apply merge-with
+            (comp set concat)
+            (apply concat (map (fn [bls] (map (fn [n] {(get commits n) #{n}}) bls)) (vals branch-links)))) nil)))
 
 
 (defn merge-links
@@ -74,7 +94,7 @@
 (defn compute-positions
   "Compute positions using width, height, circle size and repo data"
   [w h cs cg]
-  (let [ecg (explore-commit-graph cg)
+  (let [ecg (repo-pipeline cg)
         eos (- w cs 50)]
     (loop [x-order (:x-order ecg)
            x-positions {}]
@@ -154,10 +174,33 @@
                 "fix" #{160}
                 "dev" #{120}
                 "fix-2" #{140}}})
+  (let [{:keys [branch-links commits nodes] :as repo}
+        (->> test-repo
+             unify-branch-heads
+             commits->nodes
+             node-order
+             branch-links
+             branch-nodes
+             merge-links)
+        [longest-branch longest-seq] (first (sort-by val #(> (count %1) (count %2)) nodes))]
+    (if (first (branch-links longest-branch))
+      (+ (count longest-seq)
+         (inc
+          (first
+           (positions
+            #{(first (branch-links longest-branch))}
+            (get nodes (get commits (first (branch-links longest-branch))))))))
+      (count longest-seq)))
 
 
-  (repo-pipeline test-repo)
+  #_(if (first (branch-links longest-branch))
+      (+ (count longest-seq)
+         (inc
+          (first
+           (positions
+            #{(first (branch-links longest-branch))}
+            (get nodes (get commits (first (branch-links longest-branch))))))))
+      (count longest-seq))
+  (ap)
 
-
-
-  )
+  7)
