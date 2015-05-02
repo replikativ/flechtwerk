@@ -178,23 +178,36 @@
              branch-points
              merge-links)
         root-branches (get branch-points :roots)]
-    (loop [next-nodes (apply concat (map #(get nodes %) root-branches ))
+    (loop [next-nodes (apply concat (map #(get nodes %) root-branches))
            offsets (zipmap root-branches (repeat (count root-branches) 0))
            last-branch-point (first next-nodes)
            x-positions {}]
+      (println next-nodes)
       (if (empty? next-nodes)
-        (assoc repo :offsets x-positions)
-        (let [current-node (peek next-nodes)]
+        (assoc repo :x-positions x-positions)
+        (let [current-node (first next-nodes)]
           (if-let [new-branches (get branch-points current-node)]
-            (recur (concat  (apply concat (map #(get nodes %) new-branches)) (pop next-nodes))
-                   (update-in offsets [(get commits current-node)] inc)
-                   current-node
-                   x-positions)
-            (recur (pop next-nodes)
-                   (update-in offsets [(get commits current-node)] inc)
-                   last-branch-point
-                   x-positions))))))
+            (do
+              (let [branch-offsets (zipmap new-branches (repeat (count new-branches) (get offsets (get commits current-node))))]
+                  (recur (concat  (apply concat (map #(get nodes %) new-branches)) (pop next-nodes))
+                         (merge (update-in offsets [(get commits current-node)] inc) branch-offsets)
+                         current-node
+                         x-positions)))
+            (do
+              (println current-node)
+              (recur (rest next-nodes)
+                     (update-in offsets [(get commits current-node)] inc)
+                     last-branch-point
+                     x-positions)))))))
 
-  (ap)
+
+(->> test-repo
+             unify-branch-heads
+             commits->nodes
+             node-order
+             branch-points
+             merge-links)
+
+(ap)
 
   )
