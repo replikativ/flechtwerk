@@ -57,7 +57,7 @@
                          root-head (first (get causal-order root))]
                      (if root-head
                        {root-head [b]}
-                       {:root [b]})))
+                       {:roots [b]})))
                  nodes))))
 
 
@@ -176,21 +176,25 @@
              commits->nodes
              node-order
              branch-points
-             merge-links)]
-    (loop [branches (get branch-points :root)
-           current-branch (first branches)
-           next-nodes (get nodes current-branch)
-           offsets {current-branch 0}
-           max-n (count next-nodes)]
+             merge-links)
+        root-branches (get branch-points :roots)]
+    (loop [next-nodes (apply concat (map #(get nodes %) root-branches ))
+           offsets (zipmap root-branches (repeat (count root-branches) 0))
+           last-branch-point (first next-nodes)
+           x-positions {}]
       (if (empty? next-nodes)
-        (if-let [next-branch (first (rest branches))]
-          (recur (rest branches) next-branch (get nodes next-branch) offsets max-n)
-          (assoc repo :offsets offsets))
-        (if-let [next-branches (get branch-points (first next-nodes))]
-          (let [new-offsets (zipmap (vec next-branches) (repeat (count next-branches) (get offsets current-branch))) ]
-            (recur (concat branches next-branches) current-branch (rest next-nodes) (merge (update-in offsets [current-branch] inc) new-offsets) max-n))
-          (recur branches current-branch (rest next-nodes) (update-in offsets [current-branch] inc) max-n)))))
-
+        (assoc repo :offsets x-positions)
+        (let [current-node (peek next-nodes)]
+          (if-let [new-branches (get branch-points current-node)]
+            (recur (concat  (apply concat (map #(get nodes %) new-branches)) (pop next-nodes))
+                   (update-in offsets [(get commits current-node)] inc)
+                   current-node
+                   x-positions)
+            (recur (pop next-nodes)
+                   (update-in offsets [(get commits current-node)] inc)
+                   last-branch-point
+                   x-positions))))))
 
   (ap)
+
   )
