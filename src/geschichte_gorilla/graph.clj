@@ -1,6 +1,46 @@
 (ns geschichte-gorilla.graph
   (:require [clojure.set :refer [difference]]
             [aprint.core :refer [ap]]))
+(def test-repo
+    {:causal-order {10 []
+                    20 [10]
+                    30 [20]
+                    40 [20]
+                    50 [40]
+                    60 [30 50]
+                    70 [60]
+                    80 [30]
+                    90 [80]
+                    100 [70 140]
+                    110 [100]
+                    120 [90]
+                    130 [30]
+                    140 [130]
+                    150 [50]
+                    160 [150]
+                    170 [160 110]}
+     :commits
+     {10 "master"
+      20 "master"
+      30 "master"
+      40 "fix"
+      50 "fix"
+      60 "master"
+      70 "master"
+      80 "dev"
+      90 "dev"
+      100 "master"
+      110 "master"
+      120 "master"
+      130 "fix-2"
+      140 "fix-2"
+      150 "fix"
+      160 "fix"
+      170 "master"}
+     :branches {"master" #{170}
+                "fix" #{160}
+                "dev" #{120}
+                "fix-2" #{140}}})
 
 (defn positions
   "Find item index
@@ -71,9 +111,6 @@
                    {(get commits b) [link]})
                  (filter #(> (count (val %)) 1) causal-order)))))
 
-
-
-
 (defn repo-pipeline
   "Run the pipeline"
   [repo]
@@ -128,46 +165,7 @@
 
 (comment
 
-  (def test-repo
-    {:causal-order {10 []
-                    20 [10]
-                    30 [20]
-                    40 [20]
-                    50 [40]
-                    60 [30 50]
-                    70 [60]
-                    80 [30]
-                    90 [80]
-                    100 [70 140]
-                    110 [100]
-                    120 [90]
-                    130 [30]
-                    140 [130]
-                    150 [50]
-                    160 [150]
-                    170 [160 110]}
-     :commits
-     {10 "master"
-      20 "master"
-      30 "master"
-      40 "fix"
-      50 "fix"
-      60 "master"
-      70 "master"
-      80 "dev"
-      90 "dev"
-      100 "master"
-      110 "master"
-      120 "master"
-      130 "fix-2"
-      140 "fix-2"
-      150 "fix"
-      160 "fix"
-      170 "master"}
-     :branches {"master" #{170}
-                "fix" #{160}
-                "dev" #{120}
-                "fix-2" #{140}}})
+
 
 
   (let [{:keys [branch-points commits nodes] :as repo}
