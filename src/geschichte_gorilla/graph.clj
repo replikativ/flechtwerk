@@ -82,7 +82,7 @@
          (apply merge
                 (map
                  (fn [[b h]]
-                   {b (branches->nodes h causal-order (get nodes b))})
+                   {b (vec (branches->nodes h causal-order (get nodes b)))})
                  branches))))
 
 
@@ -162,50 +162,45 @@
           (recur (rest x-order) (merge x-positions branch-positions)))))))
 
 
+(defn delta-x
+  "Compute position delta"
+  [index path-size]
+  (if (<= path-size 2)
+    1
+    (/ index (* (- path-size 1) (- path-size 2)))))
+
+
+(defn update-x-positions
+  "doc-string"
+  [{:keys [nodes commits] :as repo} affected-nodes]
+  (let [p-size (inc (count affected-nodes))
+        position-deltas (map (fn [i]
+                               (let [node (get affected-nodes i)
+                                     branch (get commits node)]
+                                 [branch [node (delta-x i p-size)]]))
+                             (range (count affected-nodes)))]
+    (update-in repo [:x-positions] (fn [b] (merge-with #(merge-with - %1 %2)  b position-deltas)))))
+
+
 
 (comment
 
+  (def test-1
+    (->> test-repo
+         unify-branch-heads
+         commits->nodes
+         node-order
+         branch-points
+         merge-links))
 
+  test-1
 
+  (let [repo (assoc test-1 :x-positions {"master" {10 0 20 1/3 30 2/3 60 1}
+                                         "fix" {40 2/3 50 1 60 1}})
+        affected [10 20 30 40 50]]
+    repo
+    )
 
-  (let [{:keys [branch-points commits nodes] :as repo}
-        (->> test-repo
-             unify-branch-heads
-             commits->nodes
-             node-order
-             branch-points
-             merge-links)
-        root-branches (get branch-points :roots)]
-    (loop [next-nodes (apply concat (map #(get nodes %) root-branches))
-           offsets (zipmap root-branches (repeat (count root-branches) 0))
-           last-branch-point (first next-nodes)
-           x-positions {}]
-      (println next-nodes)
-      (if (empty? next-nodes)
-        (assoc repo :x-positions x-positions)
-        (let [current-node (first next-nodes)]
-          (if-let [new-branches (get branch-points current-node)]
-            (do
-              (let [branch-offsets (zipmap new-branches (repeat (count new-branches) (get offsets (get commits current-node))))]
-                  (recur (concat  (apply concat (map #(get nodes %) new-branches)) (pop next-nodes))
-                         (merge (update-in offsets [(get commits current-node)] inc) branch-offsets)
-                         current-node
-                         x-positions)))
-            (do
-              (println current-node)
-              (recur (rest next-nodes)
-                     (update-in offsets [(get commits current-node)] inc)
-                     last-branch-point
-                     x-positions)))))))
-
-
-(->> test-repo
-             unify-branch-heads
-             commits->nodes
-             node-order
-             branch-points
-             merge-links)
-
-(ap)
+  (ap)
 
   )
