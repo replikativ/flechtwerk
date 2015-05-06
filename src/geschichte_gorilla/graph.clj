@@ -18,7 +18,14 @@
                     140 [130]
                     150 [50]
                     160 [150]
-                    170 [160 110]}
+                    170 [160 110]
+                    180 [120]
+                    190 [180]
+                    200 [190]
+                    210 [200]
+                    220 [210]
+                    230 [140]
+                    }
      :commits
      {10 "master"
       20 "master"
@@ -31,16 +38,23 @@
       90 "dev"
       100 "master"
       110 "master"
-      120 "master"
+      120 "dev"
       130 "fix-2"
       140 "fix-2"
       150 "fix"
       160 "fix"
-      170 "master"}
+      170 "master"
+      180 "fix-dev"
+      190 "fix-dev"
+      200 "fix-dev"
+      210 "fix-dev"
+      220 "fix-dev"
+      230 "fix-2"}
      :branches {"master" #{170}
                 "fix" #{160}
                 "dev" #{120}
-                "fix-2" #{140}}})
+                "fix-dev" #{220}
+                "fix-2" #{230}}})
 
 (defn positions
   "Find item index
@@ -162,44 +176,50 @@
           (recur (rest x-order) (merge x-positions branch-positions)))))))
 
 
-(defn delta-x
-  "Compute position delta"
-  [index path-size]
-  (if (<= path-size 2)
-    1
-    (/ index (* (- path-size 1) (- path-size 2)))))
-
-
 (defn update-x-positions
   "doc-string"
-  [{:keys [nodes commits] :as repo} affected-nodes]
-  (let [p-size (inc (count affected-nodes))
-        position-deltas (map (fn [i]
-                               (let [node (get affected-nodes i)
-                                     branch (get commits node)]
-                                 [branch [node (delta-x i p-size)]]))
-                             (range (count affected-nodes)))]
-    (update-in repo [:x-positions] (fn [b] (merge-with #(merge-with - %1 %2)  b position-deltas)))))
+  [{:keys [nodes commits] :as repo} affected-nodes start]
+  nil)
+
+
+(defn get-offsets
+  "doc-string"
+  [{:keys [nodes commits causal-order branch-points] :as repo}]
+  (loop [branches (:roots branch-points)
+         offset (into {} (map (fn [b] [b [0 (count (get nodes b))]]) branches))
+         current-nodes (get nodes (first branches))]
+    (let [new-offset (->> current-nodes count range
+                          (map (fn [i]
+                                 (->> i (get current-nodes) (get branch-points)
+                                      (map (fn [b]
+                                             [b [(+ i (first (get offset (first branches)))) (count (get nodes b))]])))))
+                          (apply concat)
+                          (into {}))
+          new-branches (concat (rest branches) (keys new-offset))]
+      (if (empty? new-branches)
+        (assoc repo :offset (merge offset new-offset))
+        (recur
+         new-branches
+         (merge offset new-offset)
+         (->> branches rest first (get nodes)))))))
 
 
 
 (comment
 
-  (def test-1
+  (def repo-1
     (->> test-repo
          unify-branch-heads
          commits->nodes
          node-order
          branch-points
-         merge-links))
+         merge-links
+         get-offsets))
 
-  test-1
+  (->> repo-1
+       :offset
+       (map (fn [[k v]] [k (reduce + v)])))
 
-  (let [repo (assoc test-1 :x-positions {"master" {10 0 20 1/3 30 2/3 60 1}
-                                         "fix" {40 2/3 50 1 60 1}})
-        affected [10 20 30 40 50]]
-    repo
-    )
 
   (ap)
 
