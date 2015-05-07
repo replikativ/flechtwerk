@@ -25,7 +25,8 @@
                     210 [200]
                     220 [210]
                     230 [140]
-                    }
+                    240 [120 220]
+                    250 [240]}
      :commits
      {10 "master"
       20 "master"
@@ -49,10 +50,12 @@
       200 "fix-dev"
       210 "fix-dev"
       220 "fix-dev"
-      230 "fix-2"}
+      230 "fix-2"
+      240 "dev"
+      250 "dev"}
      :branches {"master" #{170}
                 "fix" #{160}
-                "dev" #{120}
+                "dev" #{250}
                 "fix-dev" #{220}
                 "fix-2" #{230}}})
 
@@ -186,24 +189,29 @@
   "doc-string"
   [{:keys [nodes commits causal-order branch-points] :as repo}]
   (loop [branches (:roots branch-points)
-         offset (into {} (map (fn [b] [b [0 (count (get nodes b))]]) branches))
+         offset (into {} (map (fn [b] [b {:prefix 0 :count (count (get nodes b))}]) branches))
          current-nodes (get nodes (first branches))]
-    (let [new-offset (->> current-nodes count range
+    (let [prefixes (->> current-nodes count range
                           (map (fn [i]
                                  (->> i (get current-nodes) (get branch-points)
                                       (map (fn [b]
-                                             [b [(+ i (first (get offset (first branches)))) (count (get nodes b))]])))))
+                                             [b {:prefix (+ i (get-in offset [(first branches) :prefix]))}])))))
                           (apply concat)
                           (into {}))
-          new-branches (concat (rest branches) (keys new-offset))]
+          postfixes (->> current-nodes count range
+                          (map (fn [i]
+                                 (->> i (get current-nodes) (get merge-links)
+                                      (map (fn [b]
+                                             [b {:postfix (- (count current-nodes) i)}])))))
+                          (apply concat)
+                          (into {}))
+          new-branches (concat (rest branches) (keys prefixes))]
       (if (empty? new-branches)
-        (assoc repo :offset (merge offset new-offset))
+        (assoc repo :offset (merge offset prefixes postfixes))
         (recur
          new-branches
-         (merge offset new-offset)
+         (merge offset prefixes postfixes)
          (->> branches rest first (get nodes)))))))
-
-
 
 (comment
 
@@ -216,10 +224,13 @@
          merge-links
          get-offsets))
 
+  (:merge-links repo-1)
+
+  (:offset repo-1)
+
   (->> repo-1
        :offset
-       (map (fn [[k v]] [k (reduce + v)])))
-
+       (map (fn [[k v]] [k (reduce + (vals v))])))
 
   (ap)
 
