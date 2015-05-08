@@ -125,7 +125,7 @@
          (apply merge-with concat
                 (map
                  (fn [[b link]]
-                   {(get commits b) [link]})
+                   {(first (remove #(= (get commits %) (get commits b)) link)) [b]})
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 (defn repo-pipeline
@@ -189,7 +189,7 @@
   "doc-string"
   [{:keys [nodes commits causal-order branch-points] :as repo}]
   (loop [branches (:roots branch-points)
-         offset (into {} (map (fn [b] [b {:prefix 0 :count (count (get nodes b))}]) branches))
+         offset (into {} (map (fn [b] [b {:prefix 0}]) branches))
          current-nodes (get nodes (first branches))]
     (let [prefixes (->> current-nodes count range
                           (map (fn [i]
