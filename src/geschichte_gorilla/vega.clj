@@ -45,7 +45,7 @@
 
 (defn graph-data
   "Build vega data structures"
-  [{:keys [nodes links x-positions y-positions branches x-order]}]
+  [{:keys [nodes links x-positions y-positions branches x-order]} w h]
   (let [color (zipmap x-order (take (count x-order)
                                     (repeatedly (fn [] {:r (rand-int 256)
                                                        :g (rand-int 256)
@@ -55,8 +55,8 @@
        :values
        (mapv
         (fn [[id branch]] {:value id
-                          :x (get x-positions id)
-                          :y (get y-positions id)
+                          :x (* (get x-positions id) w)
+                          :y (* (get y-positions id) h)
                           :r (get-in color [branch :r])
                           :g (get-in color [branch :g])
                           :b (get-in color [branch :b])})
@@ -75,6 +75,6 @@
        (mapv
         (fn [[k v]]
           {:value k
-           :x (get x-positions v)
-           :y (get y-positions v)})
+           :x (* (get x-positions v) w)
+           :y (* (get y-positions v) h)})
         branches)}]}))

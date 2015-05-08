@@ -128,6 +128,32 @@
                    {(first (remove #(= (get commits %) (get commits b)) link)) [b]})
                  (filter #(> (count (val %)) 1) causal-order)))))
 
+
+(defn get-offsets
+  "doc-string"
+  [{:keys [nodes commits causal-order branch-points] :as repo}]
+  (loop [branches (:roots branch-points)
+         offset (into {} (map (fn [b] [b 0]) branches))
+         current-nodes (get nodes (first branches))]
+    (let [new-offsets (->> current-nodes count range
+                          (map (fn [i]
+                                 (->> i (get current-nodes) (get branch-points)
+                                      (map (fn [b]
+                                             [b (+ i (get offset (first branches)))])))))
+                          (apply concat)
+                          (into {}))
+          new-branches (concat (rest branches) (keys new-offsets))]
+      (if (empty? new-branches)
+        (assoc repo :offset (merge offset new-offsets ))
+        (recur
+         new-branches
+         (merge offset new-offsets)
+         (->> branches rest first (get nodes)))))))
+
+
+(defn get-x-order [{:keys [offset] :as repo}]
+  (assoc repo :x-order (->> offset (sort-by val <) keys)))
+
 (defn repo-pipeline
   "Run the pipeline"
   [repo]
@@ -136,101 +162,49 @@
        commits->nodes
        node-order
        branch-points
-       merge-links))
+       merge-links
+       get-offsets
+       get-x-order))
 
 
 (defn compute-positions
   "Compute positions using width, height, circle size and repo data"
-  [w h cs cg]
-  (let [ecg (repo-pipeline cg)
-        eos (- w cs 50)]
-    (loop [x-order (:x-order ecg)
-           x-positions {}]
-      (if (empty? x-order)
-        (assoc ecg
-          :nodes (apply concat (map (fn [[branch ns]] (map (fn [n] [n branch]) ns)) (:nodes ecg)))
-          :links (remove
-                  #(or (nil? %) (-> % second nil?))
-                  (concat (:links ecg)
-                          (vals (:branch-links ecg))
-                          (apply concat (vals (:merge-links ecg)))))
-          :x-positions x-positions
-          :y-positions (let [m (count (:y-order ecg))
-                             dy (/ (- h (* 2 cs)) m )]
-                         (->> (range m)
-                              (map
-                               (fn [i]
-                                 (->> (get-in ecg [:nodes (get (:y-order ecg) i)])
-                                      (map (fn [id] [id (+ cs (/ dy 2) (* i dy))]))
-                                      (into {}))))
-                              (apply merge))))
-        (let [branch (first x-order)
-              nodes (get-in ecg [:nodes branch])
-              n (count nodes)
-              start (or (get x-positions (first (get-in ecg [:branch-links branch]))) cs)
-              end (or (get x-positions (-> ecg (get-in [:merge-links branch]) first second) ) eos)
-              dx (/ (- end start) (if (= start 0)
-                                    (if (= end eos) (dec n) n)
-                                    (if (= end eos) n (inc n))))
-              offset (if (= start 0) 0 dx)
-              branch-positions (->> (range n)
-                                    (map (fn [i] [(get nodes i) (+ start offset (* i dx))]))
-                                    (into {}))]
-          (recur (rest x-order) (merge x-positions branch-positions)))))))
+  [cs]
+  (let [{:keys [nodes offset x-order] :as repo} (repo-pipeline cs)
+        y-order (let [parts (split-at (/ (count x-order) 2) x-order)]
+                  (vec (concat (-> parts last reverse) (first parts))))]
+    (loop [branches x-order
+           x-positions {}
+           y-positions {}]
+      (if (empty? branches)
+        (assoc repo :x-positions x-positions :y-positions y-positions :y-order y-order)
+        (let [current-branch (first branches)
+              current-nodes (get nodes current-branch)
+              current-offset (get offset current-branch)
+              new-y-positions (zipmap current-nodes
+                                      (repeat (count current-nodes) (/ (first (positions #{current-branch} y-order))
+                                                                       (count y-order))))
+              new-x-positions (zipmap current-nodes
+                                      (map
+                                       (fn [i]
+                                         (/ (+ current-offset  i)
+                                            (+ current-offset (count current-nodes))))
+                                       (-> current-nodes count range)))]
+          (recur (rest branches)
+                 (merge x-positions new-x-positions)
+                 (merge y-positions new-y-positions)))))))
 
 
-(defn update-x-positions
-  "doc-string"
-  [{:keys [nodes commits] :as repo} affected-nodes start]
-  nil)
 
 
-(defn get-offsets
-  "doc-string"
-  [{:keys [nodes commits causal-order branch-points] :as repo}]
-  (loop [branches (:roots branch-points)
-         offset (into {} (map (fn [b] [b {:prefix 0}]) branches))
-         current-nodes (get nodes (first branches))]
-    (let [prefixes (->> current-nodes count range
-                          (map (fn [i]
-                                 (->> i (get current-nodes) (get branch-points)
-                                      (map (fn [b]
-                                             [b {:prefix (+ i (get-in offset [(first branches) :prefix]))}])))))
-                          (apply concat)
-                          (into {}))
-          postfixes (->> current-nodes count range
-                          (map (fn [i]
-                                 (->> i (get current-nodes) (get merge-links)
-                                      (map (fn [b]
-                                             [b {:postfix (- (count current-nodes) i)}])))))
-                          (apply concat)
-                          (into {}))
-          new-branches (concat (rest branches) (keys prefixes))]
-      (if (empty? new-branches)
-        (assoc repo :offset (merge offset prefixes postfixes))
-        (recur
-         new-branches
-         (merge offset prefixes postfixes)
-         (->> branches rest first (get nodes)))))))
 
 (comment
 
-  (def repo-1
-    (->> test-repo
-         unify-branch-heads
-         commits->nodes
-         node-order
-         branch-points
-         merge-links
-         get-offsets))
+  (def repo-1 (repo-pipeline test-repo))
 
-  (:merge-links repo-1)
 
-  (:offset repo-1)
+  (compute-positions test-repo)
 
-  (->> repo-1
-       :offset
-       (map (fn [[k v]] [k (reduce + (vals v))])))
 
   (ap)
 

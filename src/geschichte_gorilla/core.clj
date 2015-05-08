@@ -12,5 +12,5 @@
     (merge
      (vega/frame width height)
      (vega/graph-marks)
-     (->> (graph/compute-positions width height 20 peer)
-          vega/graph-data))))
+     (-> (graph/compute-positions peer)
+          (vega/graph-data width height)))))
