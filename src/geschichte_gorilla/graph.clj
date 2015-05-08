@@ -154,6 +154,7 @@
 (defn get-x-order [{:keys [offset] :as repo}]
   (assoc repo :x-order (->> offset (sort-by val <) keys vec)))
 
+
 (defn repo-pipeline
   "Run the pipeline"
   [repo]
@@ -177,7 +178,13 @@
            x-positions {}
            y-positions {}]
       (if (empty? branches)
-        (assoc repo :x-positions x-positions :y-positions y-positions :y-order y-order)
+        (let [all-nodes (vec (apply concat (vals nodes)))]
+          (assoc repo
+            :x-positions x-positions
+            :y-positions y-positions
+            :y-order y-order
+            :nodes all-nodes
+            :links (mapv vec (partition 2 1 all-nodes))))
         (let [current-branch (first branches)
               current-nodes (get nodes current-branch)
               current-offset (get offset current-branch)
@@ -199,7 +206,7 @@
 
   (def repo-1 (repo-pipeline test-repo))
 
-  (compute-positions test-repo)
+  (select-keys (compute-positions test-repo) [:nodes :links])
 
   (ap)
 
