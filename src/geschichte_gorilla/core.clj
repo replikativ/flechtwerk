@@ -13,4 +13,4 @@
      (vega/frame width height)
      (vega/graph-marks)
      (-> (graph/compute-positions peer)
-          (vega/graph-data width height)))))
+         (vega/graph-data width height)))))

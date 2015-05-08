@@ -152,7 +152,7 @@
 
 
 (defn get-x-order [{:keys [offset] :as repo}]
-  (assoc repo :x-order (->> offset (sort-by val <) keys)))
+  (assoc repo :x-order (->> offset (sort-by val <) keys vec)))
 
 (defn repo-pipeline
   "Run the pipeline"
@@ -195,16 +195,11 @@
                  (merge y-positions new-y-positions)))))))
 
 
-
-
-
 (comment
 
   (def repo-1 (repo-pipeline test-repo))
 
-
   (compute-positions test-repo)
-
 
   (ap)
 
