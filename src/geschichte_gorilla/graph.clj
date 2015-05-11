@@ -125,7 +125,7 @@
          (apply merge-with concat
                 (map
                  (fn [[b link]]
-                   {(first (remove #(= (get commits %) (get commits b)) link)) [b]})
+                   {b [(first (remove #(= (get commits %) (get commits b)) link))] })
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
@@ -133,13 +133,13 @@
   "doc-string"
   [{:keys [nodes commits causal-order branch-points] :as repo}]
   (loop [branches (:roots branch-points)
-         offset (into {} (map (fn [b] [b 0]) branches))
+         offset (into {} (map (fn [b] [b {:prefix 0}]) branches))
          current-nodes (get nodes (first branches))]
     (let [new-offsets (->> current-nodes count range
                           (map (fn [i]
                                  (->> i (get current-nodes) (get branch-points)
                                       (map (fn [b]
-                                             [b (+ i (get offset (first branches)))])))))
+                                             [b {:prefix (+ i (get-in offset [(first branches) :prefix]))}])))))
                           (apply concat)
                           (into {}))
           new-branches (concat (rest branches) (keys new-offsets))]
@@ -152,7 +152,7 @@
 
 
 (defn get-x-order [{:keys [offset] :as repo}]
-  (assoc repo :x-order (->> offset (sort-by val <) keys vec)))
+  (assoc repo :x-order (->> offset (sort-by <) keys vec)))
 
 
 (defn repo-pipeline
@@ -187,7 +187,7 @@
             :links (mapv vec (partition 2 1 all-nodes))))
         (let [current-branch (first branches)
               current-nodes (get nodes current-branch)
-              current-offset (get offset current-branch)
+              current-offset (get-in offset [current-branch :prefix])
               new-y-positions (zipmap current-nodes
                                       (repeat (count current-nodes) (/ (first (positions #{current-branch} y-order))
                                                                        (count y-order))))
@@ -207,6 +207,26 @@
   (def repo-1 (repo-pipeline test-repo))
 
   (select-keys (compute-positions test-repo) [:nodes :links])
+
+
+  (let [{:keys [nodes merge-links]} repo-1
+        sorted-branches (keys (sort-by #(-> % val count) > nodes))]
+    (loop [branches (rest sorted-branches)
+           current-branch (first sorted-branches)
+           current-nodes (reverse (get nodes current-branch))
+           postfix 0]
+      (if (empty? current-nodes)
+        (if (empty? branches)
+          (println "done")
+          (do
+            (println current-branch "done")
+            (recur (rest branches) (first branches) (reverse (get nodes (first branches))) 0)))
+
+        (do
+          (if-let [merge-from (merge-links (first current-nodes))]
+            (recur branches current-branch (vec (rest current-nodes)) (inc postfix)))))))
+
+  repo-1
 
   (ap)
 
