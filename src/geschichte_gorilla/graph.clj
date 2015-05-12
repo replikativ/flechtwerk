@@ -129,30 +129,32 @@
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
-(defn get-offsets
+(defn get-prefix
   "doc-string"
   [{:keys [nodes commits causal-order branch-points] :as repo}]
   (loop [branches (:roots branch-points)
-         offset (into {} (map (fn [b] [b {:prefix 0}]) branches))
+         prefix (into {} (map (fn [b] [b 0]) branches))
          current-nodes (get nodes (first branches))]
-    (let [new-offsets (->> current-nodes count range
+    (let [new-prefix (->> current-nodes count range
                           (map (fn [i]
-                                 (->> i (get current-nodes) (get branch-points)
+                                 (->> (get current-nodes i)
+                                      (get branch-points)
                                       (map (fn [b]
-                                             [b {:prefix (+ i (get-in offset [(first branches) :prefix]))}])))))
+                                             [b (+ i
+                                                   (get prefix (first branches)))])))))
                           (apply concat)
                           (into {}))
-          new-branches (concat (rest branches) (keys new-offsets))]
+          new-branches (concat (rest branches) (keys new-prefix))]
       (if (empty? new-branches)
-        (assoc repo :offset (merge offset new-offsets ))
+        (assoc repo :prefix (merge prefix new-prefix))
         (recur
          new-branches
-         (merge offset new-offsets)
+         (merge prefix new-prefix)
          (->> branches rest first (get nodes)))))))
 
 
-(defn get-x-order [{:keys [offset] :as repo}]
-  (assoc repo :x-order (->> offset (sort-by <) keys vec)))
+(defn get-x-order [{:keys [prefix] :as repo}]
+  (assoc repo :x-order (->> prefix (sort-by val <) keys vec)))
 
 
 (defn repo-pipeline
@@ -164,7 +166,7 @@
        node-order
        branch-points
        merge-links
-       get-offsets
+       get-prefix
        get-x-order))
 
 
@@ -206,28 +208,34 @@
 
   (def repo-1 (repo-pipeline test-repo))
 
-  (select-keys (compute-positions test-repo) [:nodes :links])
-
-
-  (let [{:keys [nodes merge-links]} repo-1
-        sorted-branches (keys (sort-by #(-> % val count) > nodes))]
-    (loop [branches (rest sorted-branches)
-           current-branch (first sorted-branches)
-           current-nodes (reverse (get nodes current-branch))
-           postfix 0]
-      (if (empty? current-nodes)
-        (if (empty? branches)
-          (println "done")
-          (do
-            (println current-branch "done")
-            (recur (rest branches) (first branches) (reverse (get nodes (first branches))) 0)))
-
-        (do
-          (if-let [merge-from (merge-links (first current-nodes))]
-            (recur branches current-branch (vec (rest current-nodes)) (inc postfix)))))))
 
   repo-1
 
+  (select-keys (compute-positions test-repo) [:nodes :links])
+
+
+  (let [{:keys [nodes merge-links commits]} repo-1
+        sorted-branches (keys (sort-by #(-> % val count) > nodes))]
+    (loop [branches sorted-branches
+           postfix (zipmap sorted-branches (repeat (count sorted-branches) 0))]
+      (if (empty? branches)
+        postfix
+        (let [current-branch (first branches)
+              current-nodes (-> (get nodes current-branch) reverse vec)
+              new-postfix (->> current-nodes count range
+                               (map
+                                (fn [i]
+                                  (let [current-node (get current-nodes i)]
+                                    (if-let [merge-node (first (merge-links current-node))]
+                                      (let [merge-from (get commits merge-node)
+                                            offset (first (positions #{merge-node} (vec (reverse (get nodes merge-from)))))]
+                                        {merge-from (max offset (+ i (get postfix current-branch)))})))))
+                               (apply merge-with max))]
+          (println postfix new-postfix current-branch)
+          (recur (rest branches)
+                 (merge-with max postfix new-postfix))))))
+
   (ap)
+
 
   )
