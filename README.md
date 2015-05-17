@@ -20,7 +20,7 @@ Geschichte-gorilla is available at Clojars. Add the following to the `:dependenc
 (def some-repo {:causal-order {10 [] 20 [10] 30 [20] 40 [20]} 
                 :branches {"master" #{30} "dev" #{40}}})
 
-(v/vega-view (g/commit-graph some-repo))                
+(v/vega-view (g/commit-graph some-repo))
 ```
 
 
