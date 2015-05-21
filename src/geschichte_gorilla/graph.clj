@@ -1,6 +1,7 @@
 (ns geschichte-gorilla.graph
   (:require [clojure.set :refer [difference]]
             [aprint.core :refer [ap]]))
+
 (def test-repo
     {:causal-order {10 []
                     20 [10]
@@ -17,7 +18,7 @@
                     130 [30]
                     140 [130]
                     150 [50]
-                    160 [150]
+                    160 [260]
                     170 [160 110]
                     180 [120]
                     190 [180]
@@ -26,7 +27,8 @@
                     220 [210]
                     230 [140]
                     240 [120 220]
-                    250 [240]}
+                    250 [240]
+                    260 [150]}
      :commits
      {10 "master"
       20 "master"
@@ -52,7 +54,8 @@
       220 "fix-dev"
       230 "fix-2"
       240 "dev"
-      250 "dev"}
+      250 "dev"
+      260 "fix"}
      :branches {"master" #{170}
                 "fix" #{160}
                 "dev" #{250}
@@ -153,6 +156,30 @@
          (->> branches rest first (get nodes)))))))
 
 
+(defn get-postfix
+  "Calculate postfix node count"
+  [{:keys [nodes merge-links commits] :as repo}]
+  (let [sorted-branches (keys (sort-by #(-> % val count) > nodes))]
+    (loop [branches sorted-branches
+           postfix (zipmap sorted-branches (repeat (count sorted-branches) 0))]
+      (if (empty? branches)
+        (assoc repo :postfix postfix)
+        (let [current-branch (first branches)
+              current-nodes (-> (get nodes current-branch) reverse vec)
+              new-postfix (->> current-nodes count range
+                               (map
+                                (fn [i]
+                                  (let [current-node (get current-nodes i)]
+                                    (if-let [merge-node (first (merge-links current-node))]
+                                      (let [merge-from (get commits merge-node)
+                                            back-offset (first (positions #{merge-node} (vec (reverse (get nodes merge-from)))))
+                                            front-offset (first (positions #{merge-node} (get nodes merge-from)))]
+                                        {merge-from (+  (inc front-offset) (max back-offset (+ i (get postfix current-branch))))})))))
+                               (apply merge-with max))]
+          (recur (rest branches)
+                 (merge-with max postfix new-postfix)))))))
+
+
 (defn get-x-order [{:keys [prefix] :as repo}]
   (assoc repo :x-order (->> prefix (sort-by val <) keys vec)))
 
@@ -167,75 +194,29 @@
        branch-points
        merge-links
        get-prefix
-       get-x-order))
-
-
-(defn compute-positions
-  "Compute positions using width, height, circle size and repo data"
-  [cs]
-  (let [{:keys [nodes offset x-order] :as repo} (repo-pipeline cs)
-        y-order (let [parts (split-at (/ (count x-order) 2) x-order)]
-                  (vec (concat (-> parts last reverse) (first parts))))]
-    (loop [branches x-order
-           x-positions {}
-           y-positions {}]
-      (if (empty? branches)
-        (let [all-nodes (vec (apply concat (vals nodes)))]
-          (assoc repo
-            :x-positions x-positions
-            :y-positions y-positions
-            :y-order y-order
-            :nodes all-nodes
-            :links (mapv vec (partition 2 1 all-nodes))))
-        (let [current-branch (first branches)
-              current-nodes (get nodes current-branch)
-              current-offset (get-in offset [current-branch :prefix])
-              new-y-positions (zipmap current-nodes
-                                      (repeat (count current-nodes) (/ (first (positions #{current-branch} y-order))
-                                                                       (count y-order))))
-              new-x-positions (zipmap current-nodes
-                                      (map
-                                       (fn [i]
-                                         (/ (+ current-offset  i)
-                                            (+ current-offset (count current-nodes))))
-                                       (-> current-nodes count range)))]
-          (recur (rest branches)
-                 (merge x-positions new-x-positions)
-                 (merge y-positions new-y-positions)))))))
+       get-postfix))
 
 
 (comment
 
-  (def repo-1 (repo-pipeline test-repo))
+  (def repo-0 (repo-pipeline test-repo))
 
 
-  repo-1
+  (let [branch-counts (:nodes (update-in repo-0 [:nodes] #(zipmap (keys %) (map count (vals %)))))]
+    (->> (select-keys repo-0 [:prefix :postfix])
+         vals
+         (apply merge-with +)
+         (merge-with max branch-counts)
+         (sort-by val >)))
 
-  (select-keys (compute-positions test-repo) [:nodes :links])
 
-
-  (let [{:keys [nodes merge-links commits]} repo-1
-        sorted-branches (keys (sort-by #(-> % val count) > nodes))]
-    (loop [branches sorted-branches
-           postfix (zipmap sorted-branches (repeat (count sorted-branches) 0))]
-      (if (empty? branches)
-        postfix
-        (let [current-branch (first branches)
-              current-nodes (-> (get nodes current-branch) reverse vec)
-              new-postfix (->> current-nodes count range
-                               (map
-                                (fn [i]
-                                  (let [current-node (get current-nodes i)]
-                                    (if-let [merge-node (first (merge-links current-node))]
-                                      (let [merge-from (get commits merge-node)
-                                            offset (first (positions #{merge-node} (vec (reverse (get nodes merge-from)))))]
-                                        {merge-from (max offset (+ i (get postfix current-branch)))})))))
-                               (apply merge-with max))]
-          (println postfix new-postfix current-branch)
-          (recur (rest branches)
-                 (merge-with max postfix new-postfix))))))
+  (let [{:keys [nodes merge-links branch-points]} repo-0
+        merge-points (into #{} (concat (flatten (vals merge-links)) (keys merge-links) (keys branch-points)))]
+    (->> (keys nodes)
+         (mapv
+          (fn [b] [b (partition-by merge-points (get nodes b))]))
+         (into {})))
 
   (ap)
-
 
   )
