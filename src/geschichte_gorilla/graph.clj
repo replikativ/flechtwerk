@@ -230,7 +230,7 @@
            current-nodes nodes
            x-positions (merge
                         (zipmap start-points (repeat (count start-points) 0))
-                        (zipmap end-points (repeat (count end-points) 1))
+                        (zipmap end-points (repeat (count end-points) 0.9))
                         (zipmap nodes (repeatedly (count nodes) rand)))]
       (if (= counter 1000)
         (assoc graph :x-positions x-positions)
@@ -247,12 +247,14 @@
   [repo]
   (let [{:keys [branches commits] :as pipeline} (repo-pipeline repo)
         {:keys [all-links all-nodes x-positions] :as graph-data} (force-x-pos pipeline)
-        x-order (vec (keys branches))]
+        x-order (let [sorted-nodes (split-at (/ (count (keys branches)) 2) (keys (sort-by #(count (val %)) > all-nodes)))]
+                  (concat (reverse (first sorted-nodes)) (second sorted-nodes) ))]
     {:nodes (vec (apply concat (map (fn [[b ns]] (map (fn [n] [n b]) ns)) all-nodes)))
      :links all-links
      :x-order x-order
      :x-positions x-positions
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))
+     :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
      }))
 
 
@@ -262,7 +264,9 @@
 
   (compute-positions test-repo)
 
+  (split-at (/ 5 2) [1 2 3 4 5 56 ])
 
   (ap)
+
 
   )

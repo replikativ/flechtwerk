@@ -30,7 +30,7 @@
              :update {:shape "circle"
                       :size {:value 90}
                       :stroke [:value "transparent"]}}}
-           #_{:type "text"
+           {:type "text"
             :from {:data "labels"}
             :properties
             {:enter {:x {:field "data.x"}
@@ -69,7 +69,16 @@
                       " " (* h (float (get y-positions source)))
                       " L " (* w (float (get x-positions target)))
                       " " (* h (float (get y-positions target))))})
-        links)}]}))
+        links)}
+      {:name "labels"
+       :values
+       (mapv
+        (fn [[k v]]
+          {:value k
+           :x (* (get x-positions v) w)
+           :y (* (get y-positions v) h)})
+        branches)}
+      ]}))
 
 
 (comment
