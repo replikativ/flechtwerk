@@ -30,7 +30,7 @@
              :update {:shape "circle"
                       :size {:value 90}
                       :stroke [:value "transparent"]}}}
-           {:type "text"
+           #_{:type "text"
             :from {:data "labels"}
             :properties
             {:enter {:x {:field "data.x"}
@@ -64,17 +64,18 @@
       {:name "links"
        :values
        (mapv
-        (fn [[source target branch]]
-          {:path (str "M " (float (get x-positions source))
-                      " " (float (get y-positions source))
-                      " L " (float (get x-positions target))
-                      " " (float (get y-positions target)))})
-        links)}
-      {:name "labels"
-       :values
-       (mapv
-        (fn [[k v]]
-          {:value k
-           :x (* (get x-positions v) w)
-           :y (* (get y-positions v) h)})
-        branches)}]}))
+        (fn [[source target]]
+          {:path (str "M " (* w (float (get x-positions source)))
+                      " " (* h (float (get y-positions source)))
+                      " L " (* w (float (get x-positions target)))
+                      " " (* h (float (get y-positions target))))})
+        links)}]}))
+
+
+(comment
+
+  (let [test-graph (graph/compute-positions graph/test-repo)]
+    (graph-data test-graph 1000 2000)
+    )
+
+  )

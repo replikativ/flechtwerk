@@ -128,7 +128,7 @@
          (apply merge-with concat
                 (map
                  (fn [[b link]]
-                   {b [(first (remove #(= (get commits %) (get commits b)) link))] })
+                   {b (first (remove #(= (get commits %) (get commits b)) link)) })
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
@@ -183,6 +183,35 @@
 (defn get-x-order [{:keys [prefix] :as repo}]
   (assoc repo :x-order (->> prefix (sort-by val <) keys vec)))
 
+(defn prepare-graph
+  "doc-string"
+  [repo]
+  (let [{:keys [nodes merge-links branch-points branches commits]} repo
+        pure-links (->> nodes
+                        (map (fn [[b ns]] (map vec (partition 2 1 ns))))
+                        (apply concat))
+        branch-links (->> branch-points
+                          (map (fn [[id bs]]
+                                 (map (fn [b] [id (-> nodes (get b) (get 0))]) bs)))
+                          (apply concat)
+                          (remove #(= (first %) :roots)))
+        start-points (into #{} (map #(-> nodes (get %) (get 0)) (get branch-points :roots)))
+        end-points (into #{} (remove (into #{} (concat (vals merge-links) (keys branch-points))) (vals branches)))
+        clean-nodes (apply concat (map (fn [[_ ns]] (remove (into start-points end-points) ns)) nodes))
+        all-links (vec (concat pure-links branch-links (map vec merge-links)))]
+    {:links (->> clean-nodes
+                 (map (fn [n] {n (->> all-links
+                                     (filter #(contains? (into #{} %) n))
+                                     flatten
+                                     (remove #{n} )
+                                     (into #{}))}))
+                 (apply merge))
+     :all-links all-links
+     :all-nodes nodes
+     :nodes clean-nodes
+     :start-points start-points
+     :end-points end-points}))
+
 
 (defn repo-pipeline
   "Run the pipeline"
@@ -192,30 +221,47 @@
        commits->nodes
        node-order
        branch-points
-       merge-links
-       get-prefix
-       get-postfix))
+       merge-links))
+
+
+(defn force-x-pos [repo]
+  (let [{:keys [links nodes end-points start-points] :as graph} (prepare-graph repo)]
+    (loop [counter 0
+           current-nodes nodes
+           x-positions (merge
+                        (zipmap start-points (repeat (count start-points) 0))
+                        (zipmap end-points (repeat (count end-points) 1))
+                        (zipmap nodes (repeatedly (count nodes) rand)))]
+      (if (= counter 1000)
+        (assoc graph :x-positions x-positions)
+        (if (empty? current-nodes)
+          (recur (inc counter) nodes x-positions)
+          (let [current-node (first current-nodes)
+                current-position (get x-positions current-node)
+                delta (reduce + (map (fn [id] (* 0.05 (* 1.8 (- (get x-positions id) current-position)))) (get links current-node)))]
+            (recur counter (rest current-nodes) (update-in x-positions [current-node] + delta))))))))
+
+
+(defn compute-positions
+  "compute x-y positions of nodes"
+  [repo]
+  (let [{:keys [branches commits] :as pipeline} (repo-pipeline repo)
+        {:keys [all-links all-nodes x-positions] :as graph-data} (force-x-pos pipeline)
+        x-order (vec (keys branches))]
+    {:nodes (vec (apply concat (map (fn [[b ns]] (map (fn [n] [n b]) ns)) all-nodes)))
+     :links all-links
+     :x-order x-order
+     :x-positions x-positions
+     :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))
+     }))
 
 
 (comment
 
   (def repo-0 (repo-pipeline test-repo))
 
+  (compute-positions test-repo)
 
-  (let [branch-counts (:nodes (update-in repo-0 [:nodes] #(zipmap (keys %) (map count (vals %)))))]
-    (->> (select-keys repo-0 [:prefix :postfix])
-         vals
-         (apply merge-with +)
-         (merge-with max branch-counts)
-         (sort-by val >)))
-
-
-  (let [{:keys [nodes merge-links branch-points]} repo-0
-        merge-points (into #{} (concat (flatten (vals merge-links)) (keys merge-links) (keys branch-points)))]
-    (->> (keys nodes)
-         (mapv
-          (fn [b] [b (partition-by merge-points (get nodes b))]))
-         (into {})))
 
   (ap)
 
