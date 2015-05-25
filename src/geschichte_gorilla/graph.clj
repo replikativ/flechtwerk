@@ -250,7 +250,7 @@
         x-order (let [sorted-nodes (split-at (/ (count (keys branches)) 2) (keys (sort-by #(count (val %)) > all-nodes)))]
                   (concat (reverse (first sorted-nodes)) (second sorted-nodes) ))]
     {:nodes (vec (apply concat (map (fn [[b ns]] (map (fn [n] [n b]) ns)) all-nodes)))
-     :links all-links
+     :links (map (fn [[s t]] [s t (get commits t)]) all-links)
      :x-order x-order
      :x-positions x-positions
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))

@@ -16,8 +16,11 @@
             :from {:data "links"}
             :properties
             {:enter {:path {:field "data.path"}
-                     :strokeWidth {:value 1}
-                     :stroke {:value "grey"}}}}
+                     :strokeWidth {:value 2}
+                     :stroke {:r {:field "data.r"}
+                              :g {:field "data.g"}
+                              :b {:field "data.b"}}
+                     #_{:value "grey"}}}}
            {:type "symbol"
             :from {:data "nodes"}
             :properties
@@ -28,7 +31,7 @@
                             :b {:field "data.b"}}
                      :fillOpacity {:value "1"}}
              :update {:shape "circle"
-                      :size {:value 90}
+                      :size {:value 110}
                       :stroke [:value "transparent"]}}}
            {:type "text"
             :from {:data "labels"}
@@ -59,16 +62,20 @@
                           :y (* (get y-positions id) h)
                           :r (get-in color [branch :r])
                           :g (get-in color [branch :g])
-                          :b (get-in color [branch :b])})
+                          :b (get-in color [branch :b])
+                          })
         nodes)}
       {:name "links"
        :values
        (mapv
-        (fn [[source target]]
+        (fn [[source target branch]]
           {:path (str "M " (* w (float (get x-positions source)))
                       " " (* h (float (get y-positions source)))
                       " L " (* w (float (get x-positions target)))
-                      " " (* h (float (get y-positions target))))})
+                      " " (* h (float (get y-positions target))))
+           :r (get-in color [branch :r])
+           :g (get-in color [branch :g])
+           :b (get-in color [branch :b])})
         links)}
       {:name "labels"
        :values
@@ -77,14 +84,4 @@
           {:value k
            :x (* (get x-positions v) w)
            :y (* (get y-positions v) h)})
-        branches)}
-      ]}))
-
-
-(comment
-
-  (let [test-graph (graph/compute-positions graph/test-repo)]
-    (graph-data test-graph 1000 2000)
-    )
-
-  )
+        branches)}]}))
