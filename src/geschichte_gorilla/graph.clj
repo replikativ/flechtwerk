@@ -256,17 +256,3 @@
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))
      :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
      }))
-
-
-(comment
-
-  (def repo-0 (repo-pipeline test-repo))
-
-  (compute-positions test-repo)
-
-  (split-at (/ 5 2) [1 2 3 4 5 56 ])
-
-  (ap)
-
-
-  )
