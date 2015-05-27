@@ -1,6 +1,5 @@
 (ns geschichte-gorilla.graph
   (:require [clojure.set :refer [difference]]
-            [geschichte-gorilla.quilesque :refer [sketch]]
             [aprint.core :refer [ap]]))
 
 (def test-repo
