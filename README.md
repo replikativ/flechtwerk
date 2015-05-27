@@ -1,5 +1,5 @@
 # geschichte-gorilla
-Simple visualization of commit graph in gorilla using vega or [quil](https://github.com/quil/quil). Currently this is still a very unstable version. Use with caution.
+Simple visualization of commit graph in gorilla using [vega](https://github.com/trifacta/vega) or [quil](https://github.com/quil/quil). Currently this is still a very unstable version. Use with caution.
 See gorilla example use [here](http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj).
 ## Installation
 Geschichte-gorilla is available at Clojars. Add the following to the `:dependencies` section of your `project.clj` file:
