@@ -212,6 +212,7 @@
      :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
      }))
 
+
 (comment
 
   (sketch (compute-positions test-repo))
