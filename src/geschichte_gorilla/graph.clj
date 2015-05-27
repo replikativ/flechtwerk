@@ -1,5 +1,6 @@
 (ns geschichte-gorilla.graph
   (:require [clojure.set :refer [difference]]
+            [quil.core :as q]
             [aprint.core :refer [ap]]))
 
 (def test-repo
@@ -132,52 +133,6 @@
                  (filter #(> (count (val %)) 1) causal-order)))))
 
 
-(defn get-prefix
-  "doc-string"
-  [{:keys [nodes commits causal-order branch-points] :as repo}]
-  (loop [branches (:roots branch-points)
-         prefix (into {} (map (fn [b] [b 0]) branches))
-         current-nodes (get nodes (first branches))]
-    (let [new-prefix (->> current-nodes count range
-                          (map (fn [i]
-                                 (->> (get current-nodes i)
-                                      (get branch-points)
-                                      (map (fn [b]
-                                             [b (+ i
-                                                   (get prefix (first branches)))])))))
-                          (apply concat)
-                          (into {}))
-          new-branches (concat (rest branches) (keys new-prefix))]
-      (if (empty? new-branches)
-        (assoc repo :prefix (merge prefix new-prefix))
-        (recur
-         new-branches
-         (merge prefix new-prefix)
-         (->> branches rest first (get nodes)))))))
-
-
-(defn get-postfix
-  "Calculate postfix node count"
-  [{:keys [nodes merge-links commits] :as repo}]
-  (let [sorted-branches (keys (sort-by #(-> % val count) > nodes))]
-    (loop [branches sorted-branches
-           postfix (zipmap sorted-branches (repeat (count sorted-branches) 0))]
-      (if (empty? branches)
-        (assoc repo :postfix postfix)
-        (let [current-branch (first branches)
-              current-nodes (-> (get nodes current-branch) reverse vec)
-              new-postfix (->> current-nodes count range
-                               (map
-                                (fn [i]
-                                  (let [current-node (get current-nodes i)]
-                                    (if-let [merge-node (first (merge-links current-node))]
-                                      (let [merge-from (get commits merge-node)
-                                            back-offset (first (positions #{merge-node} (vec (reverse (get nodes merge-from)))))
-                                            front-offset (first (positions #{merge-node} (get nodes merge-from)))]
-                                        {merge-from (+  (inc front-offset) (max back-offset (+ i (get postfix current-branch))))})))))
-                               (apply merge-with max))]
-          (recur (rest branches)
-                 (merge-with max postfix new-postfix)))))))
 
 
 (defn get-x-order [{:keys [prefix] :as repo}]
@@ -256,3 +211,47 @@
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))
      :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
      }))
+
+
+
+(defn quil-setup
+  ""
+  []
+  (q/smooth)
+  (q/frame-rate 1)
+  (q/background 200))
+
+ 
+
+
+
+
+
+
+(comment
+
+  (compute-positions test-repo)
+
+  (ap)
+
+  (def pos
+    (let [{:keys [x-positions y-positions nodes]} (compute-positions test-repo)]
+      (mapv (fn [[id b]] [(* 700 (get x-positions id)) (* 700 (get y-positions id))]) nodes)))
+
+  (defn quil-draw []
+    (dorun
+     (for [[x y] pos]
+       (do
+         (q/stroke (q/random 100))
+         (q/stroke-weight 3)
+         (q/fill 150 50)
+         (q/ellipse x y 5 5)))))
+  
+  (q/defsketch commit-graph
+       :title "Commit graph"
+       :setup quil-setup
+       :draw quil-draw
+       :size [700 700])
+
+  
+  )
