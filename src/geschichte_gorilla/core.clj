@@ -22,7 +22,6 @@
   "Draw commit graph using quil. Provide width or aspect ratio for the frame. Given an output-file-path the current frame can be stored as an image by clicking the right mouse button."
   [peer & {:keys [width aspect-ratio outfile]
                           :or {width 800
-                               aspect-ratio 1.618
-                               outfile "quilesque.png"}}]
+                               aspect-ratio 1.618}}]
   (let [height (float (/ width aspect-ratio))]
     (quilesque/sketch (graph/compute-positions peer) :width width :height height :outfile outfile)))
