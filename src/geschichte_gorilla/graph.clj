@@ -1,6 +1,6 @@
 (ns geschichte-gorilla.graph
   (:require [clojure.set :refer [difference]]
-            [quil.core :as q]
+            [geschichte-gorilla.quilesque :refer [sketch]]
             [aprint.core :refer [ap]]))
 
 (def test-repo
@@ -184,8 +184,8 @@
     (loop [counter 0
            current-nodes nodes
            x-positions (merge
-                        (zipmap start-points (repeat (count start-points) 0))
-                        (zipmap end-points (repeat (count end-points) 0.9))
+                        (zipmap start-points (repeat (count start-points) 0.05))
+                        (zipmap end-points (repeat (count end-points) 0.95))
                         (zipmap nodes (repeatedly (count nodes) rand)))]
       (if (= counter 1000)
         (assoc graph :x-positions x-positions)
@@ -208,50 +208,14 @@
      :links (map (fn [[s t]] [s t (get commits t)]) all-links)
      :x-order x-order
      :x-positions x-positions
-     :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (first (positions #{b} x-order)) (inc (count x-order)))}) ns)) all-nodes)))
+     :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (inc (first (positions #{b} x-order))) (inc (count x-order)))}) ns)) all-nodes)))
      :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
      }))
 
-
-
-(defn quil-setup
-  ""
-  []
-  (q/smooth)
-  (q/frame-rate 1)
-  (q/background 200))
-
- 
-
-
-
-
-
-
 (comment
 
-  (compute-positions test-repo)
+  (sketch (compute-positions test-repo))
 
   (ap)
 
-  (def pos
-    (let [{:keys [x-positions y-positions nodes]} (compute-positions test-repo)]
-      (mapv (fn [[id b]] [(* 700 (get x-positions id)) (* 700 (get y-positions id))]) nodes)))
-
-  (defn quil-draw []
-    (dorun
-     (for [[x y] pos]
-       (do
-         (q/stroke (q/random 100))
-         (q/stroke-weight 3)
-         (q/fill 150 50)
-         (q/ellipse x y 5 5)))))
-  
-  (q/defsketch commit-graph
-       :title "Commit graph"
-       :setup quil-setup
-       :draw quil-draw
-       :size [700 700])
-
-  
   )
