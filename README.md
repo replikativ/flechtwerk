@@ -37,15 +37,13 @@ Use in
 (g/sketch-graph some-repo)
 
 ```
-## Vega TODO
-- [ ] commit ids on mouseover
-- [ ] commit value on click
 
-## Quil TODO
+## TODO
 - [x] build graph using quil 
+- [ ] get commit ids in new geschichte version
 - [ ] commit ids on mouseover
 - [ ] branch name at head commits
-- [ ] force-based build process animated
+- [ ] force-based build process animated (quil)
 - [ ] branches and merges via bezier curves
 - [ ] commit value on click
 
