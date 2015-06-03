@@ -37,17 +37,17 @@ Use in
 (g/sketch-graph some-repo)
 
 ```
-Quit frame via 'q', show commit id via mouse-over and print current frame to output-file via 'p'.
+Quit frame via 'q', show commit id via mouse-over and print current frame to a given output-file via 'p'.
 
 
 ## TODO
 - [x] build graph using quil 
-- [ ] get commit ids in new geschichte version
-- [x] commit ids on mouseover
-- [ ] branch name at head commits
-- [ ] force-based build process animated (quil)
-- [ ] branches and merges via bezier curves
-- [ ] commit value on click
+- [ ] adust to commit ids in new geschichte version
+- [x] get commit ids on mouseover
+- [ ] show branch name at head commits
+- [ ] animate force-based build process (quil)
+- [ ] draw branches and merges via bezier curves
+- [ ] show commit value on click
 - [x] store current frame
 
 ## License
