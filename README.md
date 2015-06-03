@@ -25,7 +25,7 @@ Use in
 ```
 
 
-## Repl usage
+## Quil usage
 ```clojure
 (ns your.geschichte.project
   (:require [geschichte-gorilla.core :as g]))
@@ -37,15 +37,18 @@ Use in
 (g/sketch-graph some-repo)
 
 ```
+Quit frame via 'q', show commit id via mouse-over and print current frame to output-file via 'p'.
+
 
 ## TODO
 - [x] build graph using quil 
 - [ ] get commit ids in new geschichte version
-- [ ] commit ids on mouseover
+- [x] commit ids on mouseover
 - [ ] branch name at head commits
 - [ ] force-based build process animated (quil)
 - [ ] branches and merges via bezier curves
 - [ ] commit value on click
+- [x] store current frame
 
 ## License
 

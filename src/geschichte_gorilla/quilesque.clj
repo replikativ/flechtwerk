@@ -97,22 +97,23 @@
        (q/ellipse x y circle-size circle-size)))))
 
 
-
-
-(defn mouse-clicked
-  "Store current frame to output file if middle mouse button is clicked.
-  Specific output name as sketch parameter"
-  [{:keys [output-file] :as state} {:keys [x y button]}]
-  (when (= button :center)
-    (q/save-frame output-file)
-    (println "Saving current frame to:" output-file))
+(defn key-handler
+  "Handles key events"
+  [{:keys [output-file] :as state} {:keys [raw-key]}]
+  (case raw-key 
+    \q (quil.applet/applet-close commit-graph)
+    \p (when output-file
+         (q/save-frame output-file)
+         (println "Current frame saved to:" output-file)))
   state)
 
 
 (defn sketch
   "Render commit graph by using given positions.
   Optionally a width, height, update function and output-file can be given.
-  Quit with q, mouse-over shows commit id"
+  Quit with 'q',
+  mouse-over shows commit id,
+  'p' prints current frame to given output file"
   [repo-positions & {:keys [width height update-fn output-file]
                      :or {width 768
                           height (float (/ 1024 1.618))
@@ -123,17 +124,12 @@
     :update (fn [state] (update-fn state))
     :draw draw
     :size [width height]
-    :mouse-clicked (if output-file mouse-clicked nil)
-    :key-typed (fn [state {:keys [raw-key]}]
-                 (when (= raw-key \q)
-                   (println raw-key)
-                   (quil.applet/applet-close commit-graph))
-                 state)
+    :key-typed key-handler
     :middleware [m/fun-mode]))
 
 
 (comment
 
-  (-> graph/test-repo graph/compute-positions sketch)
+  (-> graph/test-repo graph/compute-positions (sketch :output-file "test.png") )
 
   )
