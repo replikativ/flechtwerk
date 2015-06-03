@@ -41,14 +41,14 @@ Quit frame via 'q', show commit id via mouse-over and print current frame to a g
 
 
 ## TODO
-- [x] build graph using quil 
+- [x] ~~build graph using quil~~
 - [ ] adust to commit ids in new geschichte version
-- [x] get commit ids on mouseover
+- [x] ~~get commit ids on mouseover~~
 - [ ] show branch name at head commits
 - [ ] animate force-based build process (quil)
 - [ ] draw branches and merges via bezier curves
 - [ ] show commit value on click
-- [x] store current frame
+- [x] ~~store current frame~~
 
 ## License
 
