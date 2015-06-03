@@ -214,7 +214,7 @@
 
 (comment
 
-  (sketch (compute-positions test-repo))
+  (compute-positions test-repo)
 
   (ap)
 
