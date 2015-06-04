@@ -3,6 +3,7 @@
             [geschichte-gorilla.graph :as graph]
             [quil.middleware :as m]))
 
+(declare commit-graph)
 
 (defn hex-to-rgb
  "Thanks to https://github.com/jackrusher/quil-sketches/blob/master/src/quil_sketches/util.clj"
@@ -130,6 +131,7 @@
 
 (comment
 
-  (-> graph/test-repo graph/compute-positions (sketch :output-file "test.png") )
+  (-> graph/test-repo graph/compute-positions  sketch)
+
 
   )

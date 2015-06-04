@@ -62,6 +62,14 @@
                 "fix-dev" #{220}
                 "fix-2" #{230}}})
 
+
+(defn causal-order->commits
+  ""
+  [{:keys [branches causal-order]}]
+  )
+
+
+
 (defn positions
   "Find item index
    http://stackoverflow.com/questions/4830900/how-do-i-find-the-index-of-an-item-in-a-vector"
