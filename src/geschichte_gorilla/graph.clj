@@ -68,6 +68,21 @@
   [{:keys [branches causal-order]}]
   )
 
+(defn possible-branch-heads
+  "Finds possible branch heads"
+  [repo]
+  (assoc repo :possible-branch-heads
+         (->> repo
+              :causal-order
+              (mapcat (fn [[k vs]] (if (empty? vs)
+                                     [{:root [k]}]
+                                     (map (fn [v] {v [k]}) vs))))
+              (apply merge-with concat)
+              vals
+              (filter #(> (count %) 1))
+              (apply concat)
+              (into #{}))))
+
 
 
 (defn positions
@@ -226,4 +241,8 @@
 
   (ap)
 
+  (possible-branch-heads test-repo)
+  
+
+  
   )
