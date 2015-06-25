@@ -130,8 +130,9 @@
 
 
 (comment
+  
+  (let [{:keys [commits branches causal-order]} graph/test-repo] 
+    (sketch (graph/compute-positions causal-order branches commits)))
 
-  (-> graph/test-repo graph/compute-positions  sketch)
-
-
+  
   )

@@ -1,15 +1,22 @@
-# geschichte-gorilla
+#+TITLE: geschichte-gorilla
+#+CATEGORY: geschichte-gorilla
+#+TAGS: review bug feature research mail
+#+TODO: TODO(t) STARTED(s!) | FIXED(f!) DONE(d!) 
+#+TODO: CANCELED(c@)
+#+STARTUP: overview 
+#+STARTUP: hidestars
+**** Overview
 Simple visualization of commit graph in gorilla using [vega](https://github.com/trifacta/vega) or [quil](https://github.com/quil/quil). Currently this is still a very unstable version. Use with caution.
 See gorilla example use [here](http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj).
 
-## Installation
+**** Installation
 Geschichte-gorilla is available at Clojars. Add the following to the `:dependencies` section of your `project.clj` file:
 
 ```
 [geschichte-gorilla "0.1.0-SNAPSHOT"]
 ```
 
-## Gorilla usage
+**** Gorilla usage
 Use in
 ```clojure
 (ns your.gorilla.repl
@@ -24,8 +31,7 @@ Use in
 
 ```
 
-
-## Quil usage
+**** Quil usage
 ```clojure
 (ns your.geschichte.project
   (:require [geschichte-gorilla.core :as g]))
@@ -39,18 +45,17 @@ Use in
 ```
 Quit frame via 'q', show commit id via mouse-over and print current frame to a given output-file via 'p'.
 
-
-## TODO
-- [x] ~~build graph using quil~~
-- [ ] adust to commit ids in new geschichte version
-- [x] ~~get commit ids on mouseover~~
-- [ ] show branch name at head commits
-- [ ] animate force-based build process (quil)
-- [ ] draw branches and merges via bezier curves
-- [ ] show commit value on click
-- [x] ~~store current frame~~
-
-## License
+**** TODOs
+***** TODO build graph using quil
+***** TODO adust to commit ids in new geschichte version
+***** TODO get commit ids on mouseover
+***** TODO show branch name at head commits
+***** TODO animate force-based build process (quil)
+***** TODO draw branches and merges via bezier curves
+***** TODO show commit value on click
+***** TODO store current frame
+**** References
+**** License
 
 Copyright © 2015 Konrad Kühne
 

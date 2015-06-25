@@ -63,10 +63,6 @@
                 "fix-2" #{230}}})
 
 
-(defn causal-order->commits
-  ""
-  [{:keys [branches causal-order]}]
-  )
 
 (defn possible-branch-heads
   "Finds possible branch heads"
@@ -193,7 +189,7 @@
 (defn repo-pipeline
   "Run the pipeline"
   [repo]
-  (->> (select-keys repo [:branches :causal-order :commits])
+  (->> repo
        unify-branch-heads
        commits->nodes
        node-order
@@ -220,9 +216,9 @@
 
 
 (defn compute-positions
-  "compute x-y positions of nodes"
-  [repo]
-  (let [{:keys [branches commits] :as pipeline} (repo-pipeline repo)
+  "Compute x-y positions from given causal-order branches and commits of a repo"
+  [causal-order branches commits]
+  (let [pipeline (repo-pipeline {:causal-order causal-order :branches branches :commits commits})
         {:keys [all-links all-nodes x-positions] :as graph-data} (force-x-pos pipeline)
         x-order (let [sorted-nodes (split-at (/ (count (keys branches)) 2) (keys (sort-by #(count (val %)) > all-nodes)))]
                   (concat (reverse (first sorted-nodes)) (second sorted-nodes) ))]
@@ -231,18 +227,16 @@
      :x-order x-order
      :x-positions x-positions
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (inc (first (positions #{b} x-order))) (inc (count x-order)))}) ns)) all-nodes)))
-     :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)
-     }))
+     :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)}))
 
 
 (comment
 
-  (compute-positions test-repo)
+  (let [{:keys [commits branches causal-order]} test-repo]
+    (compute-positions causal-order branches commits))
 
   (ap)
 
   (possible-branch-heads test-repo)
-  
 
-  
   )
