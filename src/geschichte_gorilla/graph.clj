@@ -1,108 +1,25 @@
-(ns geschichte-gorilla.graph
-  (:require [clojure.set :refer [difference]]
-            [aprint.core :refer [ap]]))
+(ns geschichte-gorilla.graph)
 
-(def test-repo
-    {:causal-order {10 []
-                    20 [10]
-                    30 [20]
-                    40 [20]
-                    50 [40]
-                    60 [30 50]
-                    70 [60]
-                    80 [30]
-                    90 [80]
-                    100 [70 140]
-                    110 [100]
-                    120 [90]
-                    130 [30]
-                    140 [130]
-                    150 [50]
-                    160 [260]
-                    170 [160 110]
-                    180 [120]
-                    190 [180]
-                    200 [190]
-                    210 [200]
-                    220 [210]
-                    230 [140]
-                    240 [120 220]
-                    250 [240]
-                    260 [150]}
-     :commits
-     {10 "master"
-      20 "master"
-      30 "master"
-      40 "fix"
-      50 "fix"
-      60 "master"
-      70 "master"
-      80 "dev"
-      90 "dev"
-      100 "master"
-      110 "master"
-      120 "dev"
-      130 "fix-2"
-      140 "fix-2"
-      150 "fix"
-      160 "fix"
-      170 "master"
-      180 "fix-dev"
-      190 "fix-dev"
-      200 "fix-dev"
-      210 "fix-dev"
-      220 "fix-dev"
-      230 "fix-2"
-      240 "dev"
-      250 "dev"
-      260 "fix"}
-     :branches {"master" #{170}
-                "fix" #{160}
-                "dev" #{250}
-                "fix-dev" #{220}
-                "fix-2" #{230}}})
+(defn- positions
+  "Find index in given collection by given predicat
 
-
-
-(defn possible-branch-heads
-  "Finds possible branch heads"
-  [repo]
-  (assoc repo :possible-branch-heads
-         (->> repo
-              :causal-order
-              (mapcat (fn [[k vs]] (if (empty? vs)
-                                     [{:root [k]}]
-                                     (map (fn [v] {v [k]}) vs))))
-              (apply merge-with concat)
-              vals
-              (filter #(> (count %) 1))
-              (apply concat)
-              (into #{}))))
-
-
-
-(defn positions
-  "Find item index
-   http://stackoverflow.com/questions/4830900/how-do-i-find-the-index-of-an-item-in-a-vector"
+   Thanks to: http://stackoverflow.com/questions/4830900/how-do-i-find-the-index-of-an-item-in-a-vector"
   [pred coll]
-  (keep-indexed (fn [idx x]
-                  (when (pred x)
-                    idx))
-                coll))
+  (keep-indexed (fn [idx x] (when (pred x) idx)) coll))
 
-
-(defn unify-branch-heads [repo]
+(defn- unify-branch-heads
+  "Merge all possible branch heads into single master branch"
+  [repo]
   (update-in repo [:branches] (fn [b] (into {} (map (fn [[k v]] [k (first v)]) b)))))
 
-
-(defn commits->nodes
+(defn- commits->nodes
   "Extract nodes of each branch"
   [repo]
   (assoc repo :nodes
          (apply merge-with (comp set concat)
                 (map (fn [[n b]] {b [n]}) (:commits repo)))))
 
-(defn branches->nodes
+(defn- branches->nodes
   "Find ordered nodes in branch"
   [c causal-order c-nodes]
   (loop [parents (get causal-order c)
@@ -113,8 +30,7 @@
           (recur (get causal-order next-node) next-node (conj order next-node))
           order))))
 
-
-(defn node-order
+(defn- node-order
   "Create node order from given branches, nodes and causal-order"
   [{:keys [branches causal-order nodes] :as repo}]
   (assoc repo :nodes
@@ -124,8 +40,7 @@
                    {b (vec (branches->nodes h causal-order (get nodes b)))})
                  branches))))
 
-
-(defn branch-points
+(defn- branch-points
   "Find branch-links in all branches"
   [{:keys [causal-order nodes commits] :as repo}]
   (assoc repo :branch-points
@@ -139,8 +54,7 @@
                        {:roots [b]})))
                  nodes))))
 
-
-(defn merge-links
+(defn- merge-links
   "Find merge-links in all branches"
   [{:keys [causal-order commits] :as repo}]
   (assoc repo :merge-links
@@ -150,14 +64,8 @@
                    {b (first (remove #(= (get commits %) (get commits b)) link)) })
                  (filter #(> (count (val %)) 1) causal-order)))))
 
-
-
-
-(defn get-x-order [{:keys [prefix] :as repo}]
-  (assoc repo :x-order (->> prefix (sort-by val <) keys vec)))
-
-(defn prepare-graph
-  "doc-string"
+(defn- prepare-graph
+  "Create all links from nodes, find start and end points"
   [repo]
   (let [{:keys [nodes merge-links branch-points branches commits]} repo
         pure-links (->> nodes
@@ -185,8 +93,7 @@
      :start-points start-points
      :end-points end-points}))
 
-
-(defn repo-pipeline
+(defn- repo-pipeline
   "Run the pipeline"
   [repo]
   (->> repo
@@ -196,8 +103,7 @@
        branch-points
        merge-links))
 
-
-(defn force-x-pos [repo]
+(defn- force-x-pos [repo]
   (let [{:keys [links nodes end-points start-points] :as graph} (prepare-graph repo)]
     (loop [counter 0
            current-nodes nodes
@@ -214,9 +120,21 @@
                 delta (reduce + (map (fn [id] (* 0.05 (* 1.8 (- (get x-positions id) current-position)))) (get links current-node)))]
             (recur counter (rest current-nodes) (update-in x-positions [current-node] + delta))))))))
 
-
 (defn compute-positions
-  "Compute x-y positions from given causal-order branches and commits of a repo"
+  "Compute x-y positions from given causal-order branches and commits of a repo.
+
+  Example:
+  (def causal-order {10 [] 20 [10]})
+  (def commits {10 :master 20 :master})
+  (def branches {:master #{20}})
+  (compute-positions causal-order branches commits)
+  
+  => {:branches [[:master 20]]
+      :links ([10 20 :master])
+      :nodes [[10 :master] [20 :master]]
+      :x-order (:master)
+      :x-positions {10 0.05, 20 0.95}
+      :y-positions {10 1/2, 20 1/2}}"
   [causal-order branches commits]
   (let [pipeline (repo-pipeline {:causal-order causal-order :branches branches :commits commits})
         {:keys [all-links all-nodes x-positions] :as graph-data} (force-x-pos pipeline)
@@ -228,15 +146,3 @@
      :x-positions x-positions
      :y-positions (apply merge (apply concat (map (fn [[b ns]] (map (fn [n] {n (/ (inc (first (positions #{b} x-order))) (inc (count x-order)))}) ns)) all-nodes)))
      :branches (mapv (fn [[b ns]] [b (last ns)]) all-nodes)}))
-
-
-(comment
-
-  (let [{:keys [commits branches causal-order]} test-repo]
-    (compute-positions causal-order branches commits))
-
-  (ap)
-
-  (possible-branch-heads test-repo)
-
-  )
