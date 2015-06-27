@@ -6,7 +6,7 @@
 #+STARTUP: overview 
 #+STARTUP: hidestars
 **** Overview
-src{baumkunst} is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
+=baumkunst= is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
 
 See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj][here]].
 
@@ -18,7 +18,7 @@ Geschichte-gorilla is available at Clojars. Add the following to the `:dependenc
 #+END_SRC
 
 **** Gorilla usage
-Use in gorilla
+Start a =gorilla= worksheet in your project and add the following:
 
 #+BEGIN_SRC Clojure
 (ns your.gorilla.repl
