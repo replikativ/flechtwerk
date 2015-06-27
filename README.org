@@ -5,11 +5,11 @@
 #+TODO: CANCELED(c@)
 #+STARTUP: overview 
 #+STARTUP: hidestars
-**** Overview
+***** Overview
 Simple visualization of commit graph in gorilla using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]]. Currently this is still a very unstable version. Use with caution.
 See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj][here]].
 
-**** Installation
+***** Installation
 Geschichte-gorilla is available at Clojars. Add the following to the `:dependencies` section of your `project.clj` file:
 
 #+BEGIN_SRC Clojure
@@ -17,7 +17,7 @@ Geschichte-gorilla is available at Clojars. Add the following to the `:dependenc
 #+END_SRC
 
 
-**** Gorilla usage
+***** Gorilla usage
 Use in gorilla
 
 #+BEGIN_SRC Clojure
@@ -32,7 +32,7 @@ Use in gorilla
 (v/vega-view (g/commit-graph some-repo))
 #+END_SRC
 
-**** Quil usage
+***** Quil usage
 #+BEGIN_SRC Clojure
 (ns your.geschichte.project
   (:require [geschichte-gorilla.core :as g]))
@@ -46,17 +46,17 @@ Use in gorilla
 
 Quit frame via 'q', show commit id via mouse-over and print current frame to a given output-file via 'p'.
 
-**** TODOs
-***** TODO build graph using quil
-***** TODO adust to commit ids in new geschichte version
-***** TODO get commit ids on mouseover
-***** TODO show branch name at head commits
-***** TODO animate force-based build process (quil)
-***** TODO draw branches and merges via bezier curves
-***** TODO show commit value on click
-***** TODO store current frame
-**** References
-**** License
+***** TODOs
+****** TODO build graph using quil
+****** TODO adust to commit ids in new geschichte version
+****** TODO get commit ids on mouseover
+****** TODO show branch name at head commits
+****** TODO animate force-based build process (quil)
+****** TODO draw branches and merges via bezier curves
+****** TODO show commit value on click
+****** TODO store current frame
+***** References
+***** License
 
 Copyright © 2015 Konrad Kühne
 
