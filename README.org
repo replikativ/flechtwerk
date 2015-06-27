@@ -44,7 +44,7 @@ Start a =gorilla= worksheet in your project and add the following:
 (g/sketch-graph some-repo)
 #+END_SRC
 
-Quit frame via 'q', show commit id via mouse-over and print current frame to a given output-file via 'p'.
+Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
 ****** TODO build graph using quil
