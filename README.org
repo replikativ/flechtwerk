@@ -1,12 +1,13 @@
-#+TITLE: geschichte-gorilla
-#+CATEGORY: geschichte-gorilla
+#+TITLE: baumkunst
+#+CATEGORY: baumkunst
 #+TAGS: review bug feature research mail
 #+TODO: TODO(t) STARTED(s!) | FIXED(f!) DONE(d!) 
 #+TODO: CANCELED(c@)
 #+STARTUP: overview 
 #+STARTUP: hidestars
 **** Overview
-Simple visualization of commit graph in gorilla using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]]. Currently this is still a very unstable version. Use with caution.
+src{baumkunst} is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
+
 See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj][here]].
 
 **** Installation
@@ -15,7 +16,6 @@ Geschichte-gorilla is available at Clojars. Add the following to the `:dependenc
 #+BEGIN_SRC Clojure
 [geschichte-gorilla "0.1.0-SNAPSHOT"]
 #+END_SRC
-
 
 **** Gorilla usage
 Use in gorilla
