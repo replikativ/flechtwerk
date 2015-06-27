@@ -1,6 +1,7 @@
 (ns geschichte-gorilla.core-test
   (:require [clojure.test :refer :all]
             [geschichte-gorilla.core :refer :all]))
+
 (def test-repo
     {:causal-order {10 []
                     20 [10]
@@ -13,7 +14,7 @@
                     90 [80]
                     100 [70 140]
                     110 [100]
-                    120 [90]
+                    119 [90]
                     130 [30]
                     140 [130]
                     150 [50]
@@ -62,5 +63,14 @@
                 "fix-2" #{230}}})
 
 (deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+  (let [causal-order {10 [] 20 [10]}
+        commits {10 :master 20 :master}
+        branches {:master #{20}}]
+    (testing "FIXME, I fail."
+      (is (= (compute-positions causal-order branches commits)
+             {:branches [[:master 20]]
+              :links ([10 20 :master])
+              :nodes [[10 :master] [20 :master]]
+              :x-order (:master)
+              :x-positions {10 0.05, 20 0.95}
+              :y-positions {10 1/2, 20 1/2}})))))

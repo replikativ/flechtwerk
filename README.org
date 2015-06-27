@@ -1,20 +1,20 @@
-#+TITLE: baumkunst
-#+CATEGORY: baumkunst
+#+TITLE: flechtwerk
+#+CATEGORY: flechtwerk
 #+TAGS: review bug feature research mail
 #+TODO: TODO(t) STARTED(s!) | FIXED(f!) DONE(d!) 
 #+TODO: CANCELED(c@)
 #+STARTUP: overview 
 #+STARTUP: hidestars
 **** Overview
-=baumkunst= is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
+=flechtwerk= is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
 
 See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj][here]].
 
 **** Installation
-Geschichte-gorilla is available at Clojars. Add the following to the `:dependencies` section of your `project.clj` file:
+=flechtwerk= is available at Clojars. Add the following to the =:dependencies= section of your =project.clj= file:
 
 #+BEGIN_SRC Clojure
-[geschichte-gorilla "0.1.0-SNAPSHOT"]
+[flechtwerk "0.1.0-SNAPSHOT"]
 #+END_SRC
 
 **** Gorilla usage
@@ -23,25 +23,25 @@ Start a =gorilla= worksheet in your project and add the following:
 #+BEGIN_SRC Clojure
 (ns your.gorilla.repl
   (:require  [gorilla-repl.vega :as v]
-             [geschichte-gorilla.core :as g]))
+             [flechtwerk.core :as f]))
 
-(def some-repo {:causal-order {10 [] 20 [10] 30 [20] 40 [20]}
-                :branches {"master" #{30} "dev" #{40}}
-                :commits {10 "master" 20 "master" 30 "master" 40 "dev"}})
+(def causal-order {10 [] 20 [10] 30 [20] 40 [20])
+(def branches {"master" #{30} "dev" #{40})
+(def commits {10 "master" 20 "master" 30 "master" 40 "dev"})
 
-(v/vega-view (g/commit-graph some-repo))
+(v/vega-view (f/commit-graph causal-order branches commits))
 #+END_SRC
 
 **** Quil usage
 #+BEGIN_SRC Clojure
 (ns your.geschichte.project
-  (:require [geschichte-gorilla.core :as g]))
+  (:require [flechtwerk.core :as f]))
 
-(def some-repo {:causal-order {10 [] 20 [10] 30 [20] 40 [20]}
-                :branches {"master" #{30} "dev" #{40}}
-                :commits {10 "master" 20 "master" 30 "master" 40 "dev"}})
+(def causal-order {10 [] 20 [10] 30 [20] 40 [20])
+(def branches {"master" #{30} "dev" #{40})
+(def commits {10 "master" 20 "master" 30 "master" 40 "dev"})
 
-(g/sketch-graph some-repo)
+(f/sketch-graph causal-order branches commits)
 #+END_SRC
 
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.

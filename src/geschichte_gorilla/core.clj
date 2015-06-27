@@ -6,7 +6,7 @@
 
 (defn commit-graph
   "Create vega structure to embed in a gorilla-repl view."
-  [peer & {:keys [width aspect-ratio color opacity]
+  [causal-order branches commits & {:keys [width aspect-ratio color opacity]
            :or {width 600
                 aspect-ratio 1.618
                 opacity 1}}]
@@ -14,14 +14,17 @@
     (merge
      (vega/frame width height)
      (vega/graph-marks)
-     (-> (graph/compute-positions peer)
+     (-> (graph/compute-positions casual-order branches commits)
          (vega/graph-data width height)))))
 
 
 (defn sketch-graph
-  "Draw commit graph using quil. Provide width or aspect ratio for the frame. Given an output-file-path the current frame can be stored as an image by clicking the right mouse button."
-  [peer & {:keys [width aspect-ratio outfile]
+  "Draw commit graph using quil. Provide width or aspect ratio for the frame.
+  Given an output-file-path the current frame can be stored as an image by clicking the right mouse button."
+  [causal-order branches commits & {:keys [width aspect-ratio outfile]
                           :or {width 800
                                aspect-ratio 1.618}}]
   (let [height (float (/ width aspect-ratio))]
-    (quilesque/sketch (graph/compute-positions peer) :width width :height height :outfile outfile)))
+    (quilesque/sketch
+     (graph/compute-positions causal-order branches commits)
+     :width width :height height :outfile outfile)))
