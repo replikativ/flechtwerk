@@ -14,7 +14,7 @@
     (merge
      (vega/frame width height)
      (vega/graph-marks)
-     (-> (graph/compute-positions casual-order branches commits)
+     (-> (graph/compute-positions causal-order branches commits)
          (vega/graph-data width height)))))
 
 
