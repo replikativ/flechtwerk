@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [geschichte-gorilla.graph :refer :all]))
 
-(deftest test-
+(deftest test-positions
   (let [causal-order {10 [] 20 [10]}
         commits {10 :master 20 :master}
         branches {:master #{20}}]
