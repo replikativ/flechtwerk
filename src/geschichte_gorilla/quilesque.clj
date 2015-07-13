@@ -5,7 +5,7 @@
 
 (declare commit-graph)
 
-(defn hex-to-rgb
+(defn- hex-to-rgb
  "Thanks to https://github.com/jackrusher/quil-sketches/blob/master/src/quil_sketches/util.clj"
   [hex]
   (mapv (comp #(Integer/parseInt % 16) (partial apply str))
@@ -32,7 +32,7 @@
          "#dddddd"]))
 
 
-(defn create-setup-fn
+(defn- create-setup-fn
   "Create the setup function based on give repo-positions, output-file, width and height"
   [repo-positions output-file width height]
   (fn []
@@ -62,7 +62,7 @@
        :output-file output-file})))
 
 
-(defn draw
+(defn- draw
   "Graph draw routine"
   [{:keys [nodes links colors circle-size line-width width height] :as state}]
   (q/smooth)
@@ -98,10 +98,10 @@
        (q/ellipse x y circle-size circle-size)))))
 
 
-(defn key-handler
+(defn- key-handler
   "Handles key events"
   [{:keys [output-file] :as state} {:keys [raw-key]}]
-  (case raw-key 
+  (case raw-key
     \q (quil.applet/applet-close commit-graph)
     \p (when output-file
          (q/save-frame output-file)
@@ -112,9 +112,8 @@
 (defn sketch
   "Render commit graph by using given positions.
   Optionally a width, height, update function and output-file can be given.
-  Quit with 'q',
-  mouse-over shows commit id,
-  'p' prints current frame to given output file"
+  
+  Quit with 'q',mouse-over shows commit id,'p' prints current frame to given output file"
   [repo-positions & {:keys [width height update-fn output-file]
                      :or {width 768
                           height (float (/ 1024 1.618))
@@ -127,12 +126,3 @@
     :size [width height]
     :key-typed key-handler
     :middleware [m/fun-mode]))
-
-
-(comment
-  
-  (let [{:keys [commits branches causal-order]} graph/test-repo] 
-    (sketch (graph/compute-positions causal-order branches commits)))
-
-  
-  )

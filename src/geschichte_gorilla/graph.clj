@@ -121,14 +121,14 @@
             (recur counter (rest current-nodes) (update-in x-positions [current-node] + delta))))))))
 
 (defn compute-positions
-  "Compute x-y positions from given causal-order branches and commits of a repo.
+  "Compute x-y positions from given causal-order branches and commits of a repo. The resulting positions are relative to a given screen width and height.
 
   Example:
   (def causal-order {10 [] 20 [10]})
   (def commits {10 :master 20 :master})
   (def branches {:master #{20}})
   (compute-positions causal-order branches commits)
-  
+
   => {:branches [[:master 20]]
       :links ([10 20 :master])
       :nodes [[10 :master] [20 :master]]

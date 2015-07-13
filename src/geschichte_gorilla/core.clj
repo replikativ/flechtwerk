@@ -4,12 +4,12 @@
             [geschichte-gorilla.graph :as graph]))
 
 
-(defn commit-graph
+(defn vega-commit-graph
   "Create vega structure to embed in a gorilla-repl view."
-  [{:keys [causal-order branches commits]} & {:keys [width aspect-ratio color opacity]
-         :or {width 600
-              aspect-ratio 1.618
-              opacity 1}}]
+  [commit-graph branches commits & {:keys [width aspect-ratio color opacity]
+           :or {width 600
+                aspect-ratio 1.618
+                opacity 1}}]
   (let [height (float (/ width aspect-ratio))]
     (merge
      (vega/frame width height)
@@ -18,16 +18,13 @@
          (vega/graph-data width height)))))
 
 
-(defn sketch-graph
+(defn quil-commit-graph
   "Draw commit graph using quil.
   Provide width or aspect ratio for the frame."
-  [{:keys [causal-order branches commits]}
-   & {:keys [width aspect-ratio outfile]
-      :or {width 800
-           aspect-ratio 1.618}}]
+  [causal-order branches commits & {:keys [width aspect-ratio outfile]
+                          :or {width 800
+                               aspect-ratio 1.618}}]
   (let [height (float (/ width aspect-ratio))]
     (quilesque/sketch
      (graph/compute-positions causal-order branches commits)
-     :width width
-     :height height
-     :outfile outfile)))
+     :width width :height height :outfile outfile)))
