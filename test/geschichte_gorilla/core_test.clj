@@ -1,6 +1,7 @@
 (ns geschichte-gorilla.core-test
   (:require [clojure.test :refer :all]
             [geschichte-gorilla.core :refer :all]))
+
 (def test-repo
     {:causal-order {10 []
                     20 [10]
