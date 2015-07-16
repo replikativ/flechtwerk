@@ -47,6 +47,16 @@ Start a =gorilla= worksheet in your project and add the following:
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
+***** DONE add commit ids to vega plots				    :feature:
+      CLOSED: [2015-07-16 Do 15:57] DEADLINE: <2015-07-17 Fr>
+     :LOGBOOK:  
+     - State "DONE"       from "TODO"       [2015-07-16 Do 15:57]
+     CLOCK: [2015-07-16 Do 15:46]--[2015-07-16 Do 15:56] =>  0:10
+     :END:      
+     :PROPERTIES:
+     :Created: [2015-07-16 Do 15:36]
+     :Assigned_to: kordano
+     :END:
 ***** FIXED fix that index-out-of-bound error when new branches are created :bug:
       CLOSED: [2015-07-16 Do 13:18] DEADLINE: <2015-07-17 Fr>
       :LOGBOOK:  

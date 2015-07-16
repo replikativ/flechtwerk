@@ -34,11 +34,21 @@
                       :size {:value 110}
                       :stroke [:value "transparent"]}}}
            {:type "text"
+            :from {:data "node-labels"}
+            :properties
+            {:enter {:x {:field "data.x"}
+                     :y {:field "data.y"}
+                     :align {:value  "center"}
+                     :dy {:value -20}
+                     :fontSize {:value 15}
+                     :fill {:value "black"}}
+             :update {:text {:field "data.value"}}}}
+           {:type "text"
             :from {:data "labels"}
             :properties
             {:enter {:x {:field "data.x"}
                      :y {:field "data.y"}
-                     :align {:value  "left"}
+                     :align {:value  "right"}
                      :dx {:value 10}
                      :fontSize {:value 15}
                      :fill {:value "black"}}
@@ -51,19 +61,21 @@
   [{:keys [nodes links x-positions y-positions branches x-order]} w h]
   (let [color (zipmap x-order (take (count x-order)
                                     (repeatedly (fn [] {:r (rand-int 256)
-                                                       :g (rand-int 256)
-                                                       :b (rand-int 256)}))))]
+                                                        :g (rand-int 256)
+                                                        :b (rand-int 256)}))))
+        w (* 0.95 w)
+        h (* 0.95 h)]
     {:data
      [{:name "nodes"
        :values
        (mapv
         (fn [[id branch]] {:value id
-                          :x (* (get x-positions id) w)
-                          :y (* (get y-positions id) h)
-                          :r (get-in color [branch :r])
-                          :g (get-in color [branch :g])
-                          :b (get-in color [branch :b])
-                          })
+                           :x (* (get x-positions id) w)
+                           :y (* (get y-positions id) h)
+                           :r (get-in color [branch :r])
+                           :g (get-in color [branch :g])
+                           :b (get-in color [branch :b])
+                           })
         nodes)}
       {:name "links"
        :values
@@ -77,6 +89,14 @@
            :g (get-in color [branch :g])
            :b (get-in color [branch :b])})
         links)}
+      {:name "node-labels"
+       :values
+       (mapv
+        (fn [[id branch]]
+          {:value id
+           :x (* (get x-positions id) w)
+           :y (* (get y-positions id) h)})
+        nodes)}
       {:name "labels"
        :values
        (mapv
