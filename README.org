@@ -47,6 +47,18 @@ Start a =gorilla= worksheet in your project and add the following:
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
+***** FIXED fix that index-out-of-bound error when new branches are created :bug:
+      CLOSED: [2015-07-16 Do 13:18] DEADLINE: <2015-07-17 Fr>
+      :LOGBOOK:  
+      - State "FIXED"      from "DONE"       [2015-07-16 Do 13:18]
+      - State "DONE"       from "TODO"       [2015-07-16 Do 13:18]
+      CLOCK: [2015-07-16 Do 12:55]--[2015-07-16 Do 13:18] =>  0:23
+      :END:      
+     :PROPERTIES:
+     :Created: [2015-07-16 Do 12:53]
+     :Associated_file: [[/home/konny/projects/geschichte-gorilla/src/geschichte_gorilla/graph.clj]]
+     :Assigned_to: kordano
+     :END:
 ****** TODO build graph using quil
 ****** TODO adust to commit ids in new geschichte version
 ****** TODO get commit ids on mouseover

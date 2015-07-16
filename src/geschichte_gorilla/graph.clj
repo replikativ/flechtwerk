@@ -17,18 +17,19 @@
   [repo]
   (assoc repo :nodes
          (apply merge-with (comp set concat)
-                (map (fn [[n b]] {b [n]}) (:commits repo)))))
+                (map (fn [[n b]] {b #{n}}) (:commits repo)))))
 
 (defn- branches->nodes
   "Find ordered nodes in branch"
   [c causal-order c-nodes]
   (loop [parents (get causal-order c)
-           node c
-           order (list c)]
-      (let [next-node (first (filter c-nodes parents))]
-        (if next-node
-          (recur (get causal-order next-node) next-node (conj order next-node))
-          order))))
+         node c
+         order (list c)]
+    (println c-nodes)
+    (let [next-node (first (filter c-nodes parents))]
+      (if next-node
+        (recur (get causal-order next-node) next-node (conj order next-node))
+        order))))
 
 (defn- node-order
   "Create node order from given branches, nodes and causal-order"
