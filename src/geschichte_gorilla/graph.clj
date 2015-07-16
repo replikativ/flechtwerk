@@ -25,7 +25,6 @@
   (loop [parents (get causal-order c)
          node c
          order (list c)]
-    (println c-nodes)
     (let [next-node (first (filter c-nodes parents))]
       (if next-node
         (recur (get causal-order next-node) next-node (conj order next-node))
