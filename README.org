@@ -47,6 +47,13 @@ Start a =gorilla= worksheet in your project and add the following:
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
+***** TODO add smooth edges using bezier			    :feature:
+      DEADLINE: <2015-07-27 Mo>
+     :PROPERTIES:
+     :Created: [2015-07-23 Do 12:09]
+     :Associated_file: [[/home/konny/projects/geschichte-gorilla/src/geschichte_gorilla/quilesque.clj]]
+     :Assigned_to: kordano
+     :END:
 ***** DONE add commit ids to vega plots				    :feature:
       CLOSED: [2015-07-16 Do 15:57] DEADLINE: <2015-07-17 Fr>
      :LOGBOOK:  
