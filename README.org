@@ -1,14 +1,14 @@
 #+TITLE: flechtwerk
 #+CATEGORY: flechtwerk
 #+TAGS: review bug feature research mail
-#+TODO: TODO(t) STARTED(s!) | FIXED(f!) DONE(d!) 
+#+TODO: TODO(t) STARTED(s!) | FIXED(f!) DONE(d!)
 #+TODO: CANCELED(c@)
-#+STARTUP: overview 
+#+STARTUP: overview
 #+STARTUP: hidestars
 **** Overview
-=flechtwerk= is a visualization of commit graphs using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
+=flechtwerk= is a visualization of commit graphs from [[http://github.com/replikativ/replikativ][replikativ]] using [[https://github.com/trifacta/vega][vega]] or [[https://github.com/quil/quil][quil]].
 
-See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=kordano&repo=geschichte-gorilla&path=example.clj][here]].
+See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github&user=replikativ&repo=flechtwerk&path=example.clj][here]].
 
 **** Installation
 =flechtwerk= is available at Clojars. Add the following to the =:dependencies= section of your =project.clj= file:
@@ -25,11 +25,9 @@ Start a =gorilla= worksheet in your project and add the following:
   (:require  [gorilla-repl.vega :as v]
              [flechtwerk.core :as f]))
 
-(def causal-order {10 [] 20 [10] 30 [20] 40 [20])
-(def branches {"master" #{30} "dev" #{40})
-(def commits {10 "master" 20 "master" 30 "master" 40 "dev"})
+(def causal-order {10 [] 20 [10] 30 [20] 40 [20]})
 
-(v/vega-view (f/commit-graph causal-order branches commits))
+(v/vega-commit-graph (f/commit-graph causal-order))
 #+END_SRC
 
 **** Quil usage
@@ -37,16 +35,15 @@ Start a =gorilla= worksheet in your project and add the following:
 (ns your.geschichte.project
   (:require [flechtwerk.core :as f]))
 
-(def causal-order {10 [] 20 [10] 30 [20] 40 [20])
-(def branches {"master" #{30} "dev" #{40})
-(def commits {10 "master" 20 "master" 30 "master" 40 "dev"})
+(def causal-order {10 [] 20 [10] 30 [20] 40 [20]})
 
-(f/sketch-graph causal-order branches commits)
+(f/quil-commit-graph causal-order)
 #+END_SRC
 
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
+***** TODO load and merge branches from store (for colors) :feature:
 ***** TODO add smooth edges using bezier			    :feature:
       DEADLINE: <2015-07-27 Mo>
      :PROPERTIES:
@@ -56,21 +53,21 @@ Quit frame via =q=, show commit id via mouse-over and print current frame to a g
      :END:
 ***** DONE add commit ids to vega plots				    :feature:
       CLOSED: [2015-07-16 Do 15:57] DEADLINE: <2015-07-17 Fr>
-     :LOGBOOK:  
+     :LOGBOOK:
      - State "DONE"       from "TODO"       [2015-07-16 Do 15:57]
      CLOCK: [2015-07-16 Do 15:46]--[2015-07-16 Do 15:56] =>  0:10
-     :END:      
+     :END:
      :PROPERTIES:
      :Created: [2015-07-16 Do 15:36]
      :Assigned_to: kordano
      :END:
 ***** FIXED fix that index-out-of-bound error when new branches are created :bug:
       CLOSED: [2015-07-16 Do 13:18] DEADLINE: <2015-07-17 Fr>
-      :LOGBOOK:  
+      :LOGBOOK:
       - State "FIXED"      from "DONE"       [2015-07-16 Do 13:18]
       - State "DONE"       from "TODO"       [2015-07-16 Do 13:18]
       CLOCK: [2015-07-16 Do 12:55]--[2015-07-16 Do 13:18] =>  0:23
-      :END:      
+      :END:
      :PROPERTIES:
      :Created: [2015-07-16 Do 12:53]
      :Associated_file: [[/home/konny/projects/geschichte-gorilla/src/geschichte_gorilla/graph.clj]]
@@ -87,7 +84,7 @@ Quit frame via =q=, show commit id via mouse-over and print current frame to a g
 **** References
 **** License
 
-Copyright © 2015 Konrad Kühne
+Copyright © 2015 Konrad Kühne, Christian Weilbach
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
