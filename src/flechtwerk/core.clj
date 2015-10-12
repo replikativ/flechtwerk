@@ -1,33 +1,34 @@
 (ns flechtwerk.core
   (:require [flechtwerk.vega :as vega]
             [flechtwerk.quilesque :as quilesque]
-            [flechtwerk.graph :as graph]))
+            [flechtwerk.graph :as graph]
+            [full.async :refer [go-try <?]]))
 
 
 (defn vega-commit-graph
   "Create vega structure to embed in a gorilla-repl view."
-  [commit-graph & {:keys [width aspect-ratio color opacity]
-                   :or {width 600
-                        aspect-ratio 1.618
-                        opacity 1}}]
-  (let [height (float (/ width aspect-ratio))]
-    (merge
-     (vega/frame width height)
-     (vega/graph-marks)
-     (-> (graph/compute-positions commit-graph)
-         (vega/graph-data width height)))))
+  [commit-graph & {:keys [width height store]
+                   :or {width 500
+                        height 500}}]
+  (go-try
+   (let [g (graph/compute-positions commit-graph)
+         g (if store (<? (graph/load-commits g store)) g)]
+     (merge
+      (vega/frame width height)
+      (vega/graph-marks)
+      (vega/graph-data g width height)))))
 
 
 (defn quil-commit-graph
   "Draw commit graph using quil.
   Provide width or aspect ratio for the frame."
-  [commit-graph & {:keys [width aspect-ratio outfile]
-                   :or {width 800
-                        aspect-ratio 1.618}}]
-  (let [height (float (/ width aspect-ratio))]
-    (quilesque/sketch
-     (graph/compute-positions commit-graph)
-     :width width :height height :outfile outfile)))
+  [commit-graph & {:keys [width height outfile store]
+                   :or {width 500
+                        height 500}}]
+  (go-try
+   (let [g (graph/compute-positions commit-graph)
+         g (if store (<? (graph/load-commits g store)) g)]
+     (quilesque/sketch g :width width :height height :outfile outfile))))
 
 
 
@@ -36,10 +37,10 @@
 (comment
 
   (def causal-order {10 [] 20 [10] 30 [20] 40 [20]})
-  (def branches {"master" #{30} "dev" #{40}})
-  (def commits {10 "master" 20 "master" 30 "master" 40 "dev"})
 
-  (quil-commit-graph causal-order branches commits)
+  (quilesque/sketch (graph/compute-positions causal-order))
+
+  (quil-commit-graph causal-order)
 
 
   (quil-commit-graph {1 []

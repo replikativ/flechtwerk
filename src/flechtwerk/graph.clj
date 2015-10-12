@@ -1,4 +1,6 @@
-(ns flechtwerk.graph)
+(ns flechtwerk.graph
+  (:require [konserve.protocols :refer [-get-in]]
+            [full.async :refer [<? <<? go-try go-for]]))
 
 
 (def test-graph {1 []
@@ -130,12 +132,30 @@
 
 
 
-
-
+(defn load-commits [{:keys [nodes] :as graph} store]
+  (go-try (assoc graph :nodes (->> (go-for [[id v] nodes]
+                                           [id (merge v (<? (-get-in store [id])))])
+                                   <<?
+                                   (into {})))))
 
 
 
 (comment
+  (require '[konserve.memory :refer [new-mem-store]]
+           '[full.async :refer [<??]])
+
+  (<?? (load-commits {1 {:x 1 :y 1}
+                      2 {:x 2 :y 2}}
+                     (<?? (new-mem-store (atom {1 {:author "foo@bar.com"
+                                                   :branch "master"}
+                                                2 {:author "eve@bar.com"
+                                                   :branch "kaboom"}})))))
+
+  (def store (<?? (new-mem-store (atom (into {} (map (fn [k v] [k v]) (range 16) (repeat {:branch "master"})))))))
+
+  (<?? (load-commits (compute-positions test-graph) store))
+
+
   (defn- positions
     "Find index in given collection by given predicat
 
@@ -218,10 +238,10 @@
           all-links (vec (concat pure-links branch-links (map vec merge-links)))]
       {:links (->> clean-nodes
                    (map (fn [n] {n (->> all-links
-                                       (filter #(contains? (into #{} %) n))
-                                       flatten
-                                       (remove #{n} )
-                                       (into #{}))}))
+                                        (filter #(contains? (into #{} %) n))
+                                        flatten
+                                        (remove #{n} )
+                                        (into #{}))}))
                    (apply merge))
        :all-links all-links
        :all-nodes nodes

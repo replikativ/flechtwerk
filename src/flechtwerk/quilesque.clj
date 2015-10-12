@@ -23,13 +23,7 @@
   (q/color-mode :hsb)
                                         ; setup function returns initial state. It contains
                                         ; circle color and position.
-  {:edges graph
-   :nodes (-> graph
-              g/invert
-              g/igraph->tracks
-              g/tracks->indexed-nodes
-              g/only-last-merge-point
-              g/indexed-nodes->positioned-nodes)})
+  graph)
 
 (defn draw-graph [{:keys [nodes edges]}]
   (q/smooth)

@@ -34,25 +34,25 @@
                       :size {:value 110}
                       :stroke [:value "transparent"]}}}
            #_{:type "text"
-            :from {:data "node-labels"}
-            :properties
-            {:enter {:x {:field "data.x"}
-                     :y {:field "data.y"}
-                     :align {:value  "center"}
-                     :dy {:value -20}
-                     :fontSize {:value 15}
-                     :fill {:value "black"}}
-             :update {:text {:field "data.value"}}}}
+              :from {:data "node-labels"}
+              :properties
+              {:enter {:x {:field "data.x"}
+                       :y {:field "data.y"}
+                       :align {:value  "center"}
+                       :dy {:value -20}
+                       :fontSize {:value 15}
+                       :fill {:value "black"}}
+               :update {:text {:field "data.value"}}}}
            #_{:type "text"
-            :from {:data "labels"}
-            :properties
-            {:enter {:x {:field "data.x"}
-                     :y {:field "data.y"}
-                     :align {:value  "right"}
-                     :dx {:value 10}
-                     :fontSize {:value 15}
-                     :fill {:value "black"}}
-             :update {:text {:field "data.value"}}}}]})
+              :from {:data "labels"}
+              :properties
+              {:enter {:x {:field "data.x"}
+                       :y {:field "data.y"}
+                       :align {:value  "right"}
+                       :dx {:value 10}
+                       :fontSize {:value 15}
+                       :fill {:value "black"}}
+               :update {:text {:field "data.value"}}}}]})
 
 
 (defn graph-data
@@ -67,7 +67,11 @@
         (fn [[id {:keys [x y branch]}]]
           {:value id
            :x (* x w)
-           :y (* y h)})
+           :y (* y h)
+           :r (mod (hash branch) 255)
+           :g (+ (mod (hash branch) 255) 80)
+           :b (+ (mod (hash branch) 255) 160)
+           })
         #_(fn [[id branch]] {:value id
                             :x (* (get x-positions id) w)
                             :y (* (get y-positions id) h)
