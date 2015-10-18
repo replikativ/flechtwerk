@@ -8,19 +8,26 @@
    :height height
    :padding {:top 10, :left 50, :bottom 20, :right 10}})
 
-
+;; see tooltip example: https://vega.github.io/vega-editor/
 (defn graph-marks
   "Build node and link marks"
   []
-  {:marks [{:type "path"
+  {:signals [{:name "tooltip",
+              :init {},
+              :streams [
+                        {:type "rect:mouseover", :expr "datum"},
+                        {:type "rect:mouseout", :expr "{}"}
+                        ]
+              }]
+   :predicates [{:name "tooltip" :type "=="
+                 :operands [{:signal "tooltip._id"} {:arg "id"}]}]
+   :marks [{:type "path"
             :from {:data "edges"}
             :properties
             {:enter {:path {:field "data.path"}
                      :strokeWidth {:value 2}
-                     :stroke {:r {:field "data.r"}
-                              :g {:field "data.g"}
-                              :b {:field "data.b"}}
-                     #_{:value "grey"}}}}
+                     :stroke {:value "grey"}}}
+            :update {:fill {:value "red"}}}
            {:type "symbol"
             :from {:data "nodes"}
             :properties
@@ -32,27 +39,33 @@
                      :fillOpacity {:value "1"}}
              :update {:shape "circle"
                       :size {:value 110}
-                      :stroke [:value "transparent"]}}}
-           #_{:type "text"
-              :from {:data "node-labels"}
-              :properties
-              {:enter {:x {:field "data.x"}
-                       :y {:field "data.y"}
-                       :align {:value  "center"}
-                       :dy {:value -20}
-                       :fontSize {:value 15}
-                       :fill {:value "black"}}
-               :update {:text {:field "data.value"}}}}
-           #_{:type "text"
-              :from {:data "labels"}
-              :properties
-              {:enter {:x {:field "data.x"}
-                       :y {:field "data.y"}
-                       :align {:value  "right"}
-                       :dx {:value 10}
-                       :fontSize {:value 15}
-                       :fill {:value "black"}}
-               :update {:text {:field "data.value"}}}}]})
+                      :strokeWidth {:value 2}
+                      :stroke {:value "grey"}}}}
+
+           {:type "text"
+            :from {:data "nodes"}
+            :properties
+            {:enter {:x {:field "data.x"}
+                     :y {:field "data.y"}
+                     :align {:value  "center"}
+                     :dy {:value -20}
+                     :fontSize {:value 15}
+                     :fill {:value "#333"}}
+             :update {:text {:field "data.value"}}}}
+           {:type "text"
+            :from {:data "nodes"}
+            :properties
+            {:enter {:x {:field "data.x"}
+                     :y {:field "data.y"}
+                     :align {:value  "right"}
+                     :dx {:value 10}
+                     :fontSize {:value 15}
+                     #_:fill #_{:value "black"}}
+             :update {:text {:field "data.branch"}
+                      #_:fill #_{:rule [{:predicate {:name "tooltip"
+                                                 :id {:field "_id"}}
+                                     :value "red"}
+                                    {:value "green"}]}}}}]})
 
 
 (defn graph-data
@@ -66,6 +79,7 @@
        (mapv
         (fn [[id {:keys [x y branch]}]]
           {:value id
+           :branch branch
            :x (* x w)
            :y (* y h)
            :r (mod (hash branch) 255)
