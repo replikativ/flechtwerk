@@ -1,6 +1,6 @@
 (ns flechtwerk.graph
-  (:require [konserve.protocols :refer [-get-in]]
-            [full.async :refer [<? <<? go-try go-for]]))
+  (:require [konserve.core :as k]
+            [full.async :refer [<? <<? go-try go-for #?(:cljs :include-macros true)]]))
 
 
 (def test-graph {1 []
@@ -134,7 +134,7 @@
 
 (defn load-commits [{:keys [nodes] :as graph} store]
   (go-try (assoc graph :nodes (->> (go-for [[id v] nodes]
-                                           [id (merge v (<? (-get-in store [id])))])
+                                           [id (merge v (<? (k/get-in store [id])))])
                                    <<?
                                    (into {})))))
 

@@ -14,36 +14,44 @@ See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github
 =flechtwerk= is available at Clojars. Add the following to the =:dependencies= section of your =project.clj= file:
 
 #+BEGIN_SRC Clojure
-[flechtwerk "0.1.0-SNAPSHOT"]
+[io.replikativ/flechtwerk "0.1.0"]
 #+END_SRC
 
 **** Gorilla usage
 Start a =gorilla= worksheet in your project and add the following:
 
 #+BEGIN_SRC Clojure
-(ns your.gorilla.repl
-  (:require  [gorilla-repl.vega :as v]
-             [flechtwerk.core :as f]))
+(ns harmonious-creek
+  (:require [gorilla-repl.vega :as v]
+            [full.async :refer [<??]]
+            [konserve.memory :refer [new-mem-store]]
+            [flechtwerk.core :as g]
+            [flechtwerk.graph :as graph]))
 
-(def causal-order {10 [] 20 [10] 30 [20] 40 [20]})
+(def store (<?? (new-mem-store (atom (into {} (map (fn [k v] [k v]) (range 17) (repeat {:branch "master"})))))))
 
-(v/vega-commit-graph (f/commit-graph causal-order))
+(v/vega-view (<?? (g/vega-commit-graph graph/test-graph :store store)))
 #+END_SRC
 
 **** Quil usage
 #+BEGIN_SRC Clojure
-(ns your.geschichte.project
-  (:require [flechtwerk.core :as f]))
+(ns harmonious-creek
+  (:require [full.async :refer [<??]]
+            [konserve.memory :refer [new-mem-store]]
+            [flechtwerk.core :as g]
+            [flechtwerk.graph :as graph]
+            [flechtwerk.quilesque :as q]))
 
-(def causal-order {10 [] 20 [10] 30 [20] 40 [20]})
+(def store (<?? (new-mem-store (atom (into {} (map (fn [k v] [k v]) (range 17) (repeat {:branch "master"})))))))
 
-(f/quil-commit-graph causal-order)
+(q/sketch (<?? (g/quil-commit-graph graph/test-graph :store store)))
 #+END_SRC
 
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
 
 **** TODOs
-***** TODO load and merge branches from store (for colors) :feature:
+***** DONE load and merge branches from store (for colors)          :feature:
+      - State "DONE"       from "TODO"       [2016-04-10 So 01:01]
 ***** TODO add smooth edges using bezier			    :feature:
       DEADLINE: <2015-07-27 Mo>
      :PROPERTIES:
@@ -84,7 +92,7 @@ Quit frame via =q=, show commit id via mouse-over and print current frame to a g
 **** References
 **** License
 
-Copyright © 2015 Konrad Kühne, Christian Weilbach
+Copyright © 2016 Konrad Kühne, Christian Weilbach
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
