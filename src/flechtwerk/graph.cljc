@@ -1,6 +1,9 @@
 (ns flechtwerk.graph
   (:require [konserve.core :as k]
-            [full.async :refer [<? <<? go-try go-for #?(:cljs :include-macros true)]]))
+            #?@(:clj [[full.async :refer [<? go-try <<?]]
+                      [full.lab :refer [go-for]]]))
+  #?(:cljs (:require-macros [full.async :refer [<? go-try <<?]]
+                            [full.lab :refer [go-for]])))
 
 
 (def test-graph {1 []

@@ -1,8 +1,9 @@
 (ns flechtwerk.core
   (:require [flechtwerk.vega :as vega]
-            #?(:clj [flechtwerk.quilesque :as quilesque])
+            [flechtwerk.quilesque :as quilesque]
             [flechtwerk.graph :as graph]
-            [full.async :refer [go-try <? #?(:cljs :include-macros true)]]))
+            #?(:clj [full.async :refer [<? go-try]]))
+  #?(:cljs (:require-macros [full.async :refer [<? go-try]])))
 
 
 (defn vega-commit-graph
@@ -19,17 +20,16 @@
       (vega/graph-data g width height)))))
 
 
-#?(:clj
-   (defn quil-commit-graph
-     "Draw commit graph using quil.
+(defn quil-commit-graph
+  "Draw commit graph using quil.
   Provide width or aspect ratio for the frame."
-     [commit-graph & {:keys [width height outfile store]
-                      :or {width 500
-                           height 500}}]
-     (go-try
-      (let [g (graph/compute-positions commit-graph)
-            g (if store (<? (graph/load-commits g store)) g)]
-        (quilesque/sketch g :width width :height height :outfile outfile)))))
+  [commit-graph & {:keys [width height outfile store]
+                   :or {width 500
+                        height 500}}]
+  (go-try
+   (let [g (graph/compute-positions commit-graph)
+         g (if store (<? (graph/load-commits g store)) g)]
+     (quilesque/sketch g :width width :height height :outfile outfile))))
 
 
 

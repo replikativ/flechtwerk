@@ -1,23 +1,23 @@
 (ns flechtwerk.quilesque
-  (:require [quil.core :as q]
-            [flechtwerk.graph :as g]
+  (:require [flechtwerk.graph :as g]
+            #?(:cljs [quil.core :as q :include-macros true]
+               :clj [quil.core :as q])
             [quil.middleware :as m]))
 
-(declare commit-graph)
 
 (defn- key-handler
   "Handles key events"
   [{:keys [output-file] :as state} {:keys [raw-key]}]
-  (case raw-key
-    \q (quil.applet/applet-close commit-graph)
-    \p (when output-file
-         (q/save-frame output-file)
-         (println "Current frame saved to:" output-file))
-    :else nil)
+  #?(:clj
+     (case raw-key
+       \p (when output-file
+            (q/save-frame output-file)
+            (println "Current frame saved to:" output-file))
+       :else nil))
   state)
 
 
-(defn setup [graph output-file]
+(defn setup [graph]
   (q/frame-rate 1)
                                         ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
@@ -54,7 +54,7 @@
     :title "Commit graph"
     :size [width height]
                                         ; setup function called only once, during sketch initialization.
-    :setup (partial setup graph output-file)
+    :setup (partial setup graph)
     :update (fn [state] (update-fn state))
     :key-typed key-handler
                                         ; update-state is called on each iteration before draw-state.
@@ -69,6 +69,9 @@
 
 
 (comment
+  (require 'figwheel-sidecar.repl-api)
+  (figwheel-sidecar.repl-api/cljs-repl)
+
 
   (def graph {1 []
               2 [1]

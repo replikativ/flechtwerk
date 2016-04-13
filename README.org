@@ -14,7 +14,7 @@ See gorilla example use [[http://viewer.gorilla-repl.org/view.html?source=github
 =flechtwerk= is available at Clojars. Add the following to the =:dependencies= section of your =project.clj= file:
 
 #+BEGIN_SRC Clojure
-[io.replikativ/flechtwerk "0.1.0"]
+[io.replikativ/flechtwerk "0.1.1-SNAPSHOT"]
 #+END_SRC
 
 **** Gorilla usage
@@ -48,6 +48,8 @@ Start a =gorilla= worksheet in your project and add the following:
 #+END_SRC
 
 Quit frame via =q=, show commit id via mouse-over and print current frame to a given output-file via =p=.
+
+In ClojureScript it works accordingly, look at demo.cljs and the provided index.html for details.
 
 **** TODOs
 ***** DONE load and merge branches from store (for colors)          :feature:
